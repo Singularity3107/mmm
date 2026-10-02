@@ -5,840 +5,917 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Posting Board — Personnel Management</title>
 <style>
-  /* ============ DESIGN TOKENS ============ */
   :root {
-    --bg-page: #FAF5EC;
-    --bg-panel: #F3EBDD;
-    --accent: #C4622D;
-    --accent-hover: #A94F22;
-    --border: #D9C7AE;
-    --text-primary: #3E2A1E;
-    --text-secondary: #7A5C48;
-    --status-ok: #6B7F4E;
-    --status-warn: #C98A2D;
-    --status-bad: #A04434;
-    --radius: 4px;
+    --bg-page:#FAF5EC; --bg-panel:#F3EBDD; --accent:#C4622D; --accent-hover:#A94F22;
+    --border:#D9C7AE; --text-primary:#3E2A1E; --text-secondary:#7A5C48;
+    --status-ok:#6B7F4E; --status-warn:#C98A2D; --status-bad:#A04434; --radius:4px;
   }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:"Segoe UI","Helvetica Neue",Arial,sans-serif; background:var(--bg-page); color:var(--text-primary); font-size:14px; line-height:1.45; }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  /* ============ LOGIN ============ */
+  #login { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .login-card { width:420px; background:var(--bg-panel); border:1px solid var(--border); border-radius:var(--radius); }
+  .login-head { padding:22px 24px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; }
+  .login-body { padding:18px 24px 22px; }
+  .acct { display:flex; align-items:center; gap:10px; padding:9px 10px; border:1px solid var(--border); border-radius:var(--radius); background:var(--bg-page); cursor:pointer; margin-bottom:8px; }
+  .acct:hover { border-color:var(--text-secondary); }
+  .acct.sel { border-color:var(--accent); background:#F6E9D8; }
+  .acct .who { flex:1; }
+  .acct .who .nm { font-weight:600; font-size:13px; }
+  .acct .who .rl { font-size:11px; color:var(--text-secondary); }
+  .login-note { font-size:11px; color:var(--text-secondary); margin-top:12px; text-align:center; }
 
-  body {
-    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-    background: var(--bg-page);
-    color: var(--text-primary);
-    font-size: 14px;
-    line-height: 1.45;
-  }
+  /* ============ SHELL ============ */
+  .shell { display:flex; min-height:100vh; }
+  .sidebar { width:212px; background:var(--text-primary); color:#EDE3D3; display:flex; flex-direction:column; flex-shrink:0; position:sticky; top:0; height:100vh; }
+  .sidebar .brand { padding:18px 18px 14px; display:flex; align-items:center; gap:10px; border-bottom:1px solid #54402F; }
+  .brand-mark { width:30px; height:30px; background:var(--accent); color:#FFF7EE; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; border-radius:var(--radius); }
+  .brand-name { font-weight:600; font-size:15px; }
+  .brand-sub { font-size:10px; color:#B99B7E; letter-spacing:.5px; text-transform:uppercase; }
+  .nav { padding:10px 0; flex:1; }
+  .nav-label { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:#B99B7E; padding:14px 18px 6px; }
+  .nav a { display:flex; align-items:center; gap:10px; padding:9px 18px; color:#EDE3D3; text-decoration:none; font-size:13.5px; border-left:3px solid transparent; cursor:pointer; }
+  .nav a:hover { background:#4A3728; }
+  .nav a.active { background:#4A3728; border-left-color:var(--accent); color:#FFF7EE; font-weight:600; }
+  .nav a .badge { margin-left:auto; background:var(--accent); color:#FFF7EE; font-size:10px; font-weight:700; padding:1px 6px; border-radius:8px; }
+  .sidebar-foot { padding:12px 18px; font-size:10.5px; color:#B99B7E; border-top:1px solid #54402F; }
+  .main { flex:1; display:flex; flex-direction:column; min-width:0; }
+  .topbar { display:flex; align-items:center; gap:14px; padding:0 24px; height:56px; background:var(--bg-page); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:60; }
+  .topbar .crumb { font-size:13px; color:var(--text-secondary); }
+  .topbar .crumb b { color:var(--text-primary); font-weight:600; }
+  .topbar .spacer { flex:1; }
+  .quick-search { background:var(--bg-panel); border:1px solid var(--border); border-radius:var(--radius); padding:6px 12px; width:230px; font-size:13px; color:var(--text-primary); outline:none; }
+  .quick-search:focus { border-color:var(--accent); }
+  .bell { position:relative; cursor:pointer; font-size:16px; width:34px; height:34px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); border-radius:var(--radius); background:var(--bg-panel); }
+  .bell .dot { position:absolute; top:-5px; right:-5px; background:var(--accent); color:#FFF7EE; font-size:10px; font-weight:700; min-width:16px; height:16px; border-radius:8px; display:flex; align-items:center; justify-content:center; }
+  .user-chip { display:flex; align-items:center; gap:8px; padding:4px 10px 4px 4px; border:1px solid var(--border); border-radius:var(--radius); background:var(--bg-panel); cursor:pointer; position:relative; }
+  .user-menu { position:absolute; top:38px; right:0; width:170px; background:var(--bg-page); border:1px solid var(--border); border-radius:var(--radius); display:none; z-index:70; }
+  .user-menu div { padding:9px 12px; font-size:12.5px; cursor:pointer; }
+  .user-menu div:hover { background:var(--bg-panel); }
+  .avatar { width:26px; height:26px; border-radius:var(--radius); background:var(--accent); color:#FFF7EE; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; }
+  .avatar.brown { background:var(--text-secondary); }
+  .user-chip .nm { font-size:12.5px; font-weight:600; }
+  .user-chip .rl { font-size:10.5px; color:var(--text-secondary); }
+  .content { padding:24px; }
 
-  /* ============ APP SHELL ============ */
-  .shell { display: flex; min-height: 100vh; }
+  /* ============ COMPONENTS ============ */
+  h1 { font-size:20px; font-weight:600; margin-bottom:4px; }
+  .page-sub { color:var(--text-secondary); font-size:12.5px; margin-bottom:20px; }
+  .panel { background:var(--bg-panel); border:1px solid var(--border); border-radius:var(--radius); }
+  .btn { display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; padding:7px 14px; border-radius:var(--radius); border:1px solid var(--border); background:var(--bg-panel); color:var(--text-primary); cursor:pointer; }
+  .btn:hover { border-color:var(--text-secondary); }
+  .btn.primary { background:var(--accent); border-color:var(--accent); color:#FFF7EE; }
+  .btn.primary:hover { background:var(--accent-hover); border-color:var(--accent-hover); }
+  .btn.danger { color:var(--status-bad); border-color:var(--status-bad); background:transparent; }
+  .btn.danger:hover { background:#F6E4DE; }
+  .btn.small { padding:4px 10px; font-size:11.5px; }
+  .btn:disabled { opacity:.45; cursor:not-allowed; }
+  table.data { width:100%; border-collapse:collapse; font-size:13px; }
+  table.data th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.6px; color:var(--text-secondary); padding:9px 12px; border-bottom:1px solid var(--border); background:var(--bg-panel); cursor:pointer; user-select:none; white-space:nowrap; }
+  table.data td { padding:10px 12px; border-bottom:1px solid var(--border); }
+  table.data tbody tr { cursor:pointer; background:var(--bg-page); }
+  table.data tbody tr:hover { background:#F6EFE1; }
+  .pill { display:inline-block; font-size:10.5px; font-weight:700; padding:2px 9px; border-radius:10px; border:1px solid transparent; white-space:nowrap; }
+  .pill.warn { background:#F7EAD3; color:#8A5A14; border-color:var(--status-warn); }
+  .pill.ok { background:#ECEFE2; color:#44512C; border-color:var(--status-ok); }
+  .pill.bad { background:#F6E4DE; color:#7A2E20; border-color:var(--status-bad); }
+  .pill.accent { background:transparent; color:var(--accent); border-color:var(--accent); }
+  .pill.neutral { background:var(--bg-panel); color:var(--text-secondary); border-color:var(--border); }
+  .bar { position:relative; height:8px; background:#E6DBC6; border-radius:2px; min-width:80px; }
+  .bar .fill { position:absolute; left:0; top:0; bottom:0; background:var(--accent); border-radius:2px; }
+  .bar .fill.ok { background:var(--status-ok); }
+  .bar .marker { position:absolute; top:-3px; bottom:-3px; width:2px; background:var(--text-primary); }
+  .bar-wrap { display:flex; align-items:center; gap:8px; }
+  .bar-wrap .val { font-size:12px; font-weight:600; white-space:nowrap; }
+  .tag { display:inline-block; font-size:11px; background:var(--bg-panel); border:1px solid var(--border); color:var(--text-secondary); border-radius:var(--radius); padding:1px 7px; margin:1px 2px 1px 0; }
+  .chip { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600; background:#F1E3D2; color:var(--accent-hover); border:1px solid var(--accent); border-radius:12px; padding:2px 8px 2px 10px; cursor:pointer; }
+  .chip:hover { background:#EBD7C0; }
+  .sec-title { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--text-secondary); margin-bottom:10px; }
+  .kv { display:grid; grid-template-columns:130px 1fr; gap:4px 10px; font-size:12.5px; margin-bottom:14px; }
+  .kv dt { color:var(--text-secondary); } .kv dd { font-weight:500; }
+  .tabs { display:flex; border-bottom:1px solid var(--border); margin-bottom:16px; }
+  .tabs button { background:none; border:none; cursor:pointer; font-size:13px; font-weight:600; color:var(--text-secondary); padding:9px 16px; border-bottom:2px solid transparent; margin-bottom:-1px; }
+  .tabs button.on { color:var(--accent); border-bottom-color:var(--accent); }
+  .stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px; }
+  .stat { padding:16px; } .stat .num { font-size:28px; font-weight:700; color:var(--accent); }
+  .stat .num.brown { color:var(--text-primary); } .stat .lbl { font-size:12px; color:var(--text-secondary); margin-top:2px; }
+  .dash-grid { display:grid; grid-template-columns:1.5fr 1fr; gap:14px; }
+  .panel-head { display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-bottom:1px solid var(--border); }
+  .panel-head .t { font-size:13px; font-weight:700; }
+  .panel-head a { font-size:12px; color:var(--accent); cursor:pointer; font-weight:600; }
+  .appr-card { padding:12px 14px; border-bottom:1px solid var(--border); }
+  .appr-card:last-child { border-bottom:none; }
+  .appr-card .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:3px; }
+  .appr-card .who { font-weight:700; font-size:13px; }
+  .appr-card .meta { font-size:12px; color:var(--text-secondary); margin-bottom:8px; }
+  .empty { padding:22px; text-align:center; color:var(--text-secondary); font-size:12.5px; }
 
-  .sidebar {
-    width: 210px;
-    background: var(--text-primary);
-    color: #EDE3D3;
-    display: flex;
-    flex-direction: column;
-    flex-shrink: 0;
-    position: sticky;
-    top: 0;
-    height: 100vh;
-  }
-  .sidebar .brand {
-    padding: 18px 18px 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-bottom: 1px solid #54402F;
-  }
-  .brand-mark {
-    width: 30px; height: 30px;
-    background: var(--accent);
-    color: #FFF7EE;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 13px;
-    border-radius: var(--radius);
-  }
-  .brand-name { font-weight: 600; font-size: 15px; letter-spacing: .3px; }
-  .brand-sub { font-size: 10px; color: #B99B7E; letter-spacing: .5px; text-transform: uppercase; }
+  /* find */
+  .find-grid { display:grid; grid-template-columns:235px 1fr; gap:14px; align-items:start; }
+  .filters { padding:14px; }
+  .filters .f-group { margin-bottom:16px; }
+  .filters label.cb { display:flex; align-items:center; gap:7px; font-size:12.5px; padding:3px 0; cursor:pointer; }
+  input[type="checkbox"], input[type="range"] { accent-color:var(--accent); }
+  .filters select, .filters input[type="number"], .modal select, .modal input, .modal textarea, .decision textarea, .admin-in {
+    width:100%; padding:6px 8px; font-size:12.5px; border:1px solid var(--border); border-radius:var(--radius);
+    background:var(--bg-page); color:var(--text-primary); outline:none; font-family:inherit; }
+  .filters select:focus, .modal input:focus, .modal textarea:focus, .decision textarea:focus { border-color:var(--accent); }
+  .range-lbl { display:flex; justify-content:space-between; font-size:11px; color:var(--text-secondary); margin-top:2px; }
+  .filter-actions { display:flex; gap:8px; }
+  .results-bar { display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+  .results-bar .count { font-size:13px; font-weight:600; margin-right:auto; }
+  .pager { display:flex; gap:4px; justify-content:flex-end; padding:10px 12px; }
+  .pager span { min-width:26px; height:26px; display:flex; align-items:center; justify-content:center; font-size:12px; border:1px solid var(--border); border-radius:var(--radius); cursor:pointer; background:var(--bg-page); color:var(--text-secondary); }
+  .pager span.on { background:var(--accent); border-color:var(--accent); color:#FFF7EE; font-weight:700; }
 
-  .nav { padding: 10px 0; flex: 1; }
-  .nav-label {
-    font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
-    color: #B99B7E; padding: 14px 18px 6px;
-  }
-  .nav a {
-    display: flex; align-items: center; gap: 10px;
-    padding: 9px 18px;
-    color: #EDE3D3;
-    text-decoration: none;
-    font-size: 13.5px;
-    border-left: 3px solid transparent;
-    cursor: pointer;
-  }
-  .nav a:hover { background: #4A3728; }
-  .nav a.active {
-    background: #4A3728;
-    border-left-color: var(--accent);
-    color: #FFF7EE;
-    font-weight: 600;
-  }
-  .nav a .badge {
-    margin-left: auto;
-    background: var(--accent);
-    color: #FFF7EE;
-    font-size: 10px; font-weight: 700;
-    padding: 1px 6px;
-    border-radius: 8px;
-  }
-  .sidebar-foot {
-    padding: 12px 18px;
-    font-size: 10.5px;
-    color: #B99B7E;
-    border-top: 1px solid #54402F;
-  }
+  /* quick view */
+  .qv { position:fixed; top:0; right:-430px; width:410px; height:100vh; background:var(--bg-page); border-left:1px solid var(--border); z-index:100; transition:right .15s ease; display:flex; flex-direction:column; }
+  .qv.open { right:0; }
+  .qv-head { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid var(--border); background:var(--bg-panel); }
+  .qv-body { padding:18px; overflow-y:auto; }
+  .qv-close { cursor:pointer; font-size:18px; color:var(--text-secondary); border:none; background:none; }
 
-  .main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  /* recs */
+  .rec-scope { display:flex; align-items:flex-end; gap:10px; margin-bottom:20px; }
+  .rec-scope select { padding:7px 10px; font-size:13px; min-width:220px; border:1px solid var(--border); border-radius:var(--radius); background:var(--bg-panel); color:var(--text-primary); outline:none; }
+  .rec-card { display:flex; align-items:center; gap:14px; padding:13px 16px; border-bottom:1px solid var(--border); }
+  .rec-card:last-child { border-bottom:none; }
+  .rec-rank { font-size:19px; font-weight:700; color:var(--border); width:24px; text-align:center; }
+  .rec-info { flex:1; min-width:0; } .rec-info .nm { font-weight:700; font-size:13.5px; }
+  .rec-info .why { font-size:12px; color:var(--text-secondary); margin-top:2px; }
+  .rec-score { width:180px; } .rec-actions { display:flex; gap:8px; }
 
-  .topbar {
-    display: flex; align-items: center; gap: 16px;
-    padding: 0 24px;
-    height: 56px;
-    background: var(--bg-page);
-    border-bottom: 1px solid var(--border);
-    position: sticky; top: 0; z-index: 50;
-  }
-  .topbar .crumb { font-size: 13px; color: var(--text-secondary); }
-  .topbar .crumb b { color: var(--text-primary); font-weight: 600; }
-  .topbar .spacer { flex: 1; }
-  .quick-search {
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 6px 12px;
-    width: 240px;
-    font-size: 13px;
-    color: var(--text-primary);
-    outline: none;
-  }
-  .quick-search:focus { border-color: var(--accent); }
-  .bell {
-    position: relative; cursor: pointer; font-size: 17px;
-    width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
-    border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-panel);
-  }
-  .bell .dot {
-    position: absolute; top: -5px; right: -5px;
-    background: var(--accent); color: #FFF7EE;
-    font-size: 10px; font-weight: 700;
-    min-width: 16px; height: 16px;
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .cl-switch { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-secondary); }
-  .cl-switch select {
-    border: 1px solid var(--border); background: var(--bg-panel);
-    color: var(--text-primary); border-radius: var(--radius);
-    padding: 5px 6px; font-size: 12px; cursor: pointer; outline: none;
-  }
-  .user-chip {
-    display: flex; align-items: center; gap: 8px;
-    padding: 4px 10px 4px 4px;
-    border: 1px solid var(--border); border-radius: var(--radius);
-    background: var(--bg-panel); cursor: pointer;
-  }
-  .avatar {
-    width: 26px; height: 26px; border-radius: var(--radius);
-    background: var(--accent); color: #FFF7EE;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 700;
-  }
-  .avatar.brown { background: var(--text-secondary); }
-  .user-chip .nm { font-size: 12.5px; font-weight: 600; }
-  .user-chip .rl { font-size: 10.5px; color: var(--text-secondary); }
+  /* requests */
+  .req-grid { display:grid; grid-template-columns:1.4fr 1fr; gap:14px; align-items:start; }
+  .req-detail { padding:16px; }
+  .timeline { padding:16px; border-bottom:1px solid var(--border); }
+  .tl-item { display:flex; gap:10px; padding:5px 0; font-size:12.5px; }
+  .tl-dot { width:10px; height:10px; border-radius:50%; margin-top:4px; flex-shrink:0; }
+  .tl-dot.done { background:var(--status-ok); } .tl-dot.now { background:var(--accent); } .tl-dot.todo { background:var(--border); } .tl-dot.bad { background:var(--status-bad); }
+  .tl-item .when { color:var(--text-secondary); font-size:11.5px; }
+  .decision { padding:16px; }
+  .decision textarea { min-height:70px; resize:vertical; margin-bottom:10px; }
+  .decision .btns { display:flex; gap:8px; flex-wrap:wrap; }
 
-  .content { padding: 24px; }
+  /* profile */
+  .prof-head { display:flex; gap:18px; padding:18px; align-items:center; }
+  .prof-photo { width:84px; height:84px; border-radius:var(--radius); background:var(--text-secondary); color:#FFF7EE; display:flex; align-items:center; justify-content:center; font-size:26px; font-weight:700; flex-shrink:0; }
+  .prof-head .info { flex:1; } .prof-head .info .nm { font-size:19px; font-weight:700; }
+  .prof-head .info .role { color:var(--text-secondary); font-size:13px; margin:2px 0 6px; }
+  .tenure-block { padding:14px 18px; border-top:1px solid var(--border); }
+  .prof-body { padding:16px 18px; }
 
-  /* ============ GENERIC COMPONENTS ============ */
-  h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
-  .page-sub { color: var(--text-secondary); font-size: 12.5px; margin-bottom: 20px; }
-
-  .panel {
-    background: var(--bg-panel);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-  }
-
-  .btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 12.5px; font-weight: 600;
-    padding: 7px 14px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background: var(--bg-panel);
-    color: var(--text-primary);
-    cursor: pointer;
-  }
-  .btn:hover { border-color: var(--text-secondary); }
-  .btn.primary { background: var(--accent); border-color: var(--accent); color: #FFF7EE; }
-  .btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
-  .btn.danger { color: var(--status-bad); border-color: var(--status-bad); background: transparent; }
-  .btn.danger:hover { background: #F6E4DE; }
-  .btn.small { padding: 4px 10px; font-size: 11.5px; }
-
-  table.data { width: 100%; border-collapse: collapse; font-size: 13px; }
-  table.data th {
-    text-align: left;
-    font-size: 11px; text-transform: uppercase; letter-spacing: .6px;
-    color: var(--text-secondary);
-    padding: 9px 12px;
-    border-bottom: 1px solid var(--border);
-    background: var(--bg-panel);
-    cursor: pointer; user-select: none; white-space: nowrap;
-  }
-  table.data td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
-  table.data tbody tr { cursor: pointer; background: var(--bg-page); }
-  table.data tbody tr:hover { background: #F6EFE1; }
-  table.data tbody tr:last-child td { border-bottom: none; }
-
-  .pill {
-    display: inline-block;
-    font-size: 10.5px; font-weight: 700;
-    padding: 2px 9px;
-    border-radius: 10px;
-    border: 1px solid transparent;
-    white-space: nowrap;
-  }
-  .pill.warn { background: #F7EAD3; color: #8A5A14; border-color: var(--status-warn); }
-  .pill.ok { background: #ECEFE2; color: #44512C; border-color: var(--status-ok); }
-  .pill.bad { background: #F6E4DE; color: #7A2E20; border-color: var(--status-bad); }
-  .pill.accent { background: transparent; color: var(--accent); border-color: var(--accent); }
-  .pill.neutral { background: var(--bg-panel); color: var(--text-secondary); border-color: var(--border); }
-
-  /* flat tenure / match bar */
-  .bar { position: relative; height: 8px; background: #E6DBC6; border-radius: 2px; min-width: 90px; }
-  .bar .fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); border-radius: 2px; }
-  .bar .fill.ok { background: var(--status-ok); }
-  .bar .marker {
-    position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--text-primary);
-  }
-  .bar-wrap { display: flex; align-items: center; gap: 8px; }
-  .bar-wrap .val { font-size: 12px; font-weight: 600; white-space: nowrap; }
-
-  .tag {
-    display: inline-block; font-size: 11px;
-    background: var(--bg-panel); border: 1px solid var(--border);
-    color: var(--text-secondary);
-    border-radius: var(--radius);
-    padding: 1px 7px; margin: 1px 2px 1px 0;
-  }
-  .chip {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 11.5px; font-weight: 600;
-    background: #F1E3D2; color: var(--accent-hover);
-    border: 1px solid var(--accent);
-    border-radius: 12px; padding: 2px 8px 2px 10px; cursor: pointer;
-  }
-  .chip span { font-weight: 400; }
-  .chip:hover { background: #EBD7C0; }
-
-  .sec-title {
-    font-size: 12px; font-weight: 700; text-transform: uppercase;
-    letter-spacing: .8px; color: var(--text-secondary); margin-bottom: 10px;
-  }
-
-  /* ============ DASHBOARD ============ */
-  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
-  .stat { padding: 16px; }
-  .stat .num { font-size: 28px; font-weight: 700; color: var(--accent); }
-  .stat .num.brown { color: var(--text-primary); }
-  .stat .lbl { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
-
-  .dash-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px; }
-  .panel-head {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 14px; border-bottom: 1px solid var(--border);
-  }
-  .panel-head .t { font-size: 13px; font-weight: 700; }
-  .panel-head a { font-size: 12px; color: var(--accent); text-decoration: none; cursor: pointer; font-weight: 600; }
-  .panel-head a:hover { color: var(--accent-hover); }
-
-  .appr-card { padding: 12px 14px; border-bottom: 1px solid var(--border); }
-  .appr-card:last-child { border-bottom: none; }
-  .appr-card .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px; }
-  .appr-card .who { font-weight: 700; font-size: 13px; }
-  .appr-card .meta { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
-
-  /* ============ FIND PERSONNEL ============ */
-  .find-grid { display: grid; grid-template-columns: 230px 1fr; gap: 14px; align-items: start; }
-  .filters { padding: 14px; }
-  .filters .f-group { margin-bottom: 18px; }
-  .filters label.cb { display: flex; align-items: center; gap: 7px; font-size: 12.5px; padding: 3px 0; cursor: pointer; }
-  input[type="checkbox"], input[type="range"] { accent-color: var(--accent); }
-  .filters select, .filters input[type="number"] {
-    width: 100%; padding: 6px 8px; font-size: 12.5px;
-    border: 1px solid var(--border); border-radius: var(--radius);
-    background: var(--bg-page); color: var(--text-primary); outline: none;
-  }
-  .range-row { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text-secondary); }
-  .range-row input[type="range"] { flex: 1; }
-  .filter-actions { display: flex; gap: 8px; }
-
-  .results-bar { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
-  .results-bar .count { font-size: 13px; font-weight: 600; margin-right: auto; }
-  .pager { display: flex; gap: 4px; justify-content: flex-end; padding: 10px 12px; }
-  .pager span {
-    min-width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
-    font-size: 12px; border: 1px solid var(--border); border-radius: var(--radius);
-    cursor: pointer; background: var(--bg-page); color: var(--text-secondary);
-  }
-  .pager span.on { background: var(--accent); border-color: var(--accent); color: #FFF7EE; font-weight: 700; }
-
-  /* quick-view side panel */
-  .qv {
-    position: fixed; top: 0; right: -420px; width: 400px; height: 100vh;
-    background: var(--bg-page); border-left: 1px solid var(--border);
-    z-index: 100; transition: right .15s ease;
-    display: flex; flex-direction: column;
-  }
-  .qv.open { right: 0; }
-  .qv-head {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 18px; border-bottom: 1px solid var(--border); background: var(--bg-panel);
-  }
-  .qv-body { padding: 18px; overflow-y: auto; }
-  .qv-close { cursor: pointer; font-size: 18px; color: var(--text-secondary); border: none; background: none; }
-  .qv-close:hover { color: var(--text-primary); }
-  .kv { display: grid; grid-template-columns: 120px 1fr; gap: 4px 10px; font-size: 12.5px; margin-bottom: 16px; }
-  .kv dt { color: var(--text-secondary); }
-  .kv dd { font-weight: 500; }
-
-  /* ============ RECOMMENDATIONS ============ */
-  .rec-scope { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 20px; }
-  .rec-scope select {
-    padding: 7px 10px; font-size: 13px; min-width: 220px;
-    border: 1px solid var(--border); border-radius: var(--radius);
-    background: var(--bg-panel); color: var(--text-primary); outline: none;
-  }
-  .rec-card { display: flex; align-items: center; gap: 16px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
-  .rec-card:last-child { border-bottom: none; }
-  .rec-rank { font-size: 20px; font-weight: 700; color: var(--border); width: 28px; text-align: center; }
-  .rec-info { flex: 1; min-width: 0; }
-  .rec-info .nm { font-weight: 700; font-size: 13.5px; }
-  .rec-info .why { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
-  .rec-score { width: 190px; }
-  .rec-actions { display: flex; gap: 8px; }
-
-  /* ============ REQUESTS ============ */
-  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
-  .tabs button {
-    background: none; border: none; cursor: pointer;
-    font-size: 13px; font-weight: 600; color: var(--text-secondary);
-    padding: 9px 16px; border-bottom: 2px solid transparent; margin-bottom: -1px;
-  }
-  .tabs button.on { color: var(--accent); border-bottom-color: var(--accent); }
-  .tabs button:hover { color: var(--text-primary); }
-
-  .req-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; align-items: start; }
-  .req-detail { padding: 16px; }
-  .timeline { padding: 16px; border-bottom: 1px solid var(--border); }
-  .tl-item { display: flex; gap: 10px; padding: 5px 0; font-size: 12.5px; }
-  .tl-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
-  .tl-dot.done { background: var(--status-ok); }
-  .tl-dot.now { background: var(--accent); }
-  .tl-dot.todo { background: var(--border); }
-  .tl-item .when { color: var(--text-secondary); font-size: 11.5px; }
-  .decision { padding: 16px; }
-  .decision textarea {
-    width: 100%; min-height: 70px; resize: vertical;
-    border: 1px solid var(--border); border-radius: var(--radius);
-    background: var(--bg-page); padding: 8px; font-size: 12.5px;
-    font-family: inherit; color: var(--text-primary); outline: none; margin-bottom: 10px;
-  }
-  .decision textarea:focus { border-color: var(--accent); }
-  .decision .btns { display: flex; gap: 8px; flex-wrap: wrap; }
-  .notice {
-    display: none; padding: 10px 14px; margin-bottom: 14px;
-    border: 1px solid var(--status-ok); background: #ECEFE2; color: #44512C;
-    border-radius: var(--radius); font-size: 12.5px; font-weight: 600;
-  }
-  .notice.show { display: block; }
-
-  /* ============ PROFILE ============ */
-  .prof-head { display: flex; gap: 18px; padding: 18px; align-items: center; }
-  .prof-photo {
-    width: 84px; height: 84px; border-radius: var(--radius);
-    background: var(--text-secondary); color: #FFF7EE;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 26px; font-weight: 700; flex-shrink: 0;
-  }
-  .prof-head .info { flex: 1; }
-  .prof-head .info .nm { font-size: 19px; font-weight: 700; }
-  .prof-head .info .role { color: var(--text-secondary); font-size: 13px; margin: 2px 0 6px; }
-  .tenure-block { padding: 14px 18px; border-top: 1px solid var(--border); }
-  .tenure-block .bar { height: 10px; }
-  .prof-body { padding: 16px 18px; }
-
-  .hidden-cl { display: none !important; }
-
-  .foot-note { text-align: center; color: var(--text-secondary); font-size: 11px; padding: 24px 0 8px; }
+  /* modal, toast, notifications */
+  .modal-bg { position:fixed; inset:0; background:rgba(62,42,30,.35); z-index:200; display:none; align-items:center; justify-content:center; }
+  .modal-bg.show { display:flex; }
+  .modal { width:480px; background:var(--bg-page); border:1px solid var(--border); border-radius:var(--radius); }
+  .modal-head { padding:14px 18px; border-bottom:1px solid var(--border); background:var(--bg-panel); display:flex; justify-content:space-between; align-items:center; }
+  .modal-body { padding:18px; } .modal-body .fg { margin-bottom:12px; }
+  .modal-body label { display:block; font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:var(--text-secondary); margin-bottom:4px; }
+  .toast { position:fixed; bottom:20px; right:20px; z-index:300; background:var(--text-primary); color:#EDE3D3; padding:11px 16px; border-radius:var(--radius); font-size:12.5px; border-left:3px solid var(--accent); display:none; }
+  .toast.show { display:block; }
+  .notif-drop { position:fixed; top:52px; right:120px; width:320px; background:var(--bg-page); border:1px solid var(--border); border-radius:var(--radius); z-index:150; display:none; }
+  .notif-drop.show { display:block; }
+  .notif-item { padding:10px 14px; border-bottom:1px solid var(--border); font-size:12.5px; cursor:pointer; }
+  .notif-item:hover { background:var(--bg-panel); }
+  .notif-item.unread { border-left:3px solid var(--accent); }
+  .notif-item .when { font-size:10.5px; color:var(--text-secondary); }
+  .hidden { display:none !important; }
+  .foot-note { text-align:center; color:var(--text-secondary); font-size:11px; padding:24px 0 8px; }
 </style>
 </head>
-<body data-cl="2">
+<body>
 
-<div class="shell">
-  <!-- ============ SIDEBAR ============ -->
-  <aside class="sidebar">
-    <div class="brand">
+<!-- ============ LOGIN ============ -->
+<div id="login">
+  <div class="login-card">
+    <div class="login-head">
       <div class="brand-mark">PB</div>
-      <div>
-        <div class="brand-name">Posting Board</div>
-        <div class="brand-sub">Internal · Restricted</div>
+      <div><div style="font-weight:700;font-size:16px">Posting Board</div>
+      <div style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px">Internal · Restricted · On-premises</div></div>
+    </div>
+    <div class="login-body">
+      <div class="sec-title">Select a demo account</div>
+      <div id="acctList"></div>
+      <div class="fg" style="margin:12px 0">
+        <label style="display:block;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-secondary);margin-bottom:4px">Password</label>
+        <input type="password" class="admin-in" value="demo" style="width:100%">
       </div>
+      <button class="btn primary" style="width:100%;justify-content:center;padding:9px" onclick="doLogin()">Sign in</button>
+      <div class="login-note">Authorised access only — all activity is logged.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP SHELL ============ -->
+<div class="shell hidden" id="shell">
+  <aside class="sidebar">
+    <div class="brand"><div class="brand-mark">PB</div>
+      <div><div class="brand-name">Posting Board</div><div class="brand-sub">Internal · Restricted</div></div>
     </div>
     <nav class="nav">
       <div class="nav-label">Main</div>
-      <a class="active" data-view="dashboard" onclick="go('dashboard', this)">▦&nbsp; Dashboard</a>
-      <a data-view="find" onclick="go('find', this)">⌕&nbsp; Find Personnel</a>
-      <a data-view="recs" onclick="go('recs', this)">★&nbsp; Recommendations</a>
-      <a data-view="requests" onclick="go('requests', this)">⇄&nbsp; Requests <span class="badge">3</span></a>
-      <div class="nav-label" data-min="4">Administration</div>
-      <a data-view="admin" data-min="4" onclick="go('admin', this)">⚙&nbsp; Admin Panel</a>
+      <a class="active" data-view="dashboard" onclick="go('dashboard')">▦&nbsp; Dashboard</a>
+      <a data-view="find" onclick="go('find')">⌕&nbsp; Find Personnel</a>
+      <a data-view="recs" onclick="go('recs')">★&nbsp; Recommendations</a>
+      <a data-view="requests" onclick="go('requests')">⇄&nbsp; Requests <span class="badge hidden" id="navReqBadge">0</span></a>
+      <div class="nav-label" id="adminLabel">Administration</div>
+      <a data-view="admin" id="adminLink" onclick="go('admin')">⚙&nbsp; Admin Panel</a>
     </nav>
-    <div class="sidebar-foot">All activity is logged.<br>v0.1 demo · on-prem build</div>
+    <div class="sidebar-foot">All activity is logged.<br>v1.0 demo · on-prem build</div>
   </aside>
 
-  <!-- ============ MAIN ============ -->
   <div class="main">
     <div class="topbar">
       <div class="crumb" id="crumb"><b>Dashboard</b></div>
       <div class="spacer"></div>
-      <input class="quick-search" placeholder="Quick search: name, ID, skill…">
-      <div class="bell" onclick="go('requests', document.querySelector('[data-view=requests]'))">🔔<span class="dot">3</span></div>
-      <div class="cl-switch">
-        Clearance
-        <select id="clSelect" onchange="setClearance(this.value)">
-          <option value="1">L1 Basic</option>
-          <option value="2" selected>L2 Dept Head</option>
-          <option value="3">L3 Senior / HR</option>
-          <option value="4">L4 Admin</option>
-        </select>
-      </div>
-      <div class="user-chip">
-        <div class="avatar">JT</div>
-        <div>
-          <div class="nm">J. Tan</div>
-          <div class="rl">Head, Operations</div>
+      <input class="quick-search" id="topSearch" placeholder="Quick search: name, ID, skill…" oninput="topSearchInput(this.value)">
+      <div class="bell" id="bellBtn" onclick="toggleNotifs(event)">🔔<span class="dot hidden" id="bellDot">0</span></div>
+      <span class="pill neutral" id="clPill">L2</span>
+      <div class="user-chip" id="userChip" onclick="toggleUserMenu(event)">
+        <div class="avatar" id="userAv">JT</div>
+        <div><div class="nm" id="userNm">—</div><div class="rl" id="userRl">—</div></div>
+        <div class="user-menu" id="userMenu">
+          <div onclick="go('dashboard')">My dashboard</div>
+          <div onclick="logout()">Sign out</div>
         </div>
       </div>
     </div>
 
     <div class="content">
-
-      <!-- ======== VIEW: DASHBOARD ======== -->
-      <section id="view-dashboard">
-        <h1>Good morning, J. Tan</h1>
-        <div class="page-sub">Operations · Tuesday, 12 March · You have <b>3 requests</b> awaiting action.</div>
-
-        <div class="stat-grid">
-          <div class="panel stat"><div class="num brown">142</div><div class="lbl">Personnel in your scope</div></div>
-          <div class="panel stat"><div class="num">18</div><div class="lbl">Due for posting</div></div>
-          <div class="panel stat"><div class="num">3</div><div class="lbl">Pending your approval</div></div>
-          <div class="panel stat"><div class="num brown">2</div><div class="lbl">Your open requests</div></div>
-        </div>
-
-        <div class="dash-grid">
-          <div class="panel">
-            <div class="panel-head"><span class="t">⚠ Due for posting — your department</span><a onclick="go('recs', document.querySelector('[data-view=recs]'))">View all →</a></div>
-            <table class="data">
-              <thead><tr><th>Name ▾</th><th>Role</th><th>Time in role</th><th>Status</th></tr></thead>
-              <tbody>
-                <tr onclick="openProfile()"><td>S. Lim</td><td>Coordinator</td>
-                  <td><div class="bar-wrap"><div class="bar" style="width:110px"><div class="fill" style="width:84%"></div><div class="marker" style="left:70%"></div></div><span class="val">4.2 y</span></div></td>
-                  <td><span class="pill warn">Due for posting</span></td></tr>
-                <tr onclick="openProfile()"><td>K. Osei</td><td>Planner</td>
-                  <td><div class="bar-wrap"><div class="bar" style="width:110px"><div class="fill" style="width:79%"></div><div class="marker" style="left:70%"></div></div><span class="val">3.9 y</span></div></td>
-                  <td><span class="pill warn">Due for posting</span></td></tr>
-                <tr onclick="openProfile()"><td>A. Rahman</td><td>Exec Officer</td>
-                  <td><div class="bar-wrap"><div class="bar" style="width:110px"><div class="fill" style="width:62%"></div><div class="marker" style="left:70%"></div></div><span class="val">3.1 y</span></div></td>
-                  <td><span class="pill accent">On request</span></td></tr>
-                <tr onclick="openProfile()"><td>M. Chen</td><td>Storekeeper</td>
-                  <td><div class="bar-wrap"><div class="bar" style="width:110px"><div class="fill ok" style="width:48%"></div><div class="marker" style="left:70%"></div></div><span class="val">2.4 y</span></div></td>
-                  <td><span class="pill ok">Eligible</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="panel">
-            <div class="panel-head"><span class="t">⏳ Awaiting your sign-off</span><a onclick="go('requests', document.querySelector('[data-view=requests]'))">All →</a></div>
-            <div class="appr-card">
-              <div class="top"><span class="who">A. Rahman</span><span class="pill accent">REQ-0043</span></div>
-              <div class="meta">Operations → Planning · Snr Planner · submitted 2 days ago</div>
-              <button class="btn primary small" onclick="openRequest()">Review</button>
-            </div>
-            <div class="appr-card">
-              <div class="top"><span class="who">P. Nair</span><span class="pill accent">REQ-0044</span></div>
-              <div class="meta">Operations → Field Unit · Team Lead · submitted 3 days ago</div>
-              <button class="btn primary small" onclick="openRequest()">Review</button>
-            </div>
-            <div class="appr-card">
-              <div class="top"><span class="who">D. Wong</span><span class="pill accent">REQ-0045</span></div>
-              <div class="meta">Operations → Procurement · Buyer · submitted 4 days ago</div>
-              <button class="btn primary small" onclick="openRequest()">Review</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ======== VIEW: FIND PERSONNEL ======== -->
-      <section id="view-find" style="display:none">
-        <h1>Find Personnel</h1>
-        <div class="page-sub">Search and filter across departments. Results respect your clearance level (<b id="clLabel">L2</b>).</div>
-
-        <div class="find-grid">
-          <div class="panel filters">
-            <div class="f-group">
-              <div class="sec-title">Skills</div>
-              <label class="cb"><input type="checkbox" checked> Logistics</label>
-              <label class="cb"><input type="checkbox" checked> Procurement</label>
-              <label class="cb"><input type="checkbox"> Planning</label>
-              <label class="cb"><input type="checkbox"> Field Operations</label>
-              <label class="cb"><input type="checkbox"> Administration</label>
-            </div>
-            <div class="f-group">
-              <div class="sec-title">Years of service</div>
-              <div class="range-row"><span>3</span><input type="range" min="0" max="20" value="10"><span>10</span></div>
-            </div>
-            <div class="f-group">
-              <div class="sec-title">Time in current role</div>
-              <div class="range-row"><span>2</span><input type="range" min="0" max="8" value="5"><span>5+</span></div>
-            </div>
-            <div class="f-group">
-              <div class="sec-title">Job scope</div>
-              <select><option>Operations</option><option>Planning</option><option>Logistics</option><option>Procurement</option><option>Any</option></select>
-            </div>
-            <div class="f-group">
-              <div class="sec-title">Status</div>
-              <label class="cb"><input type="checkbox" checked> Due for posting</label>
-              <label class="cb"><input type="checkbox"> Recently moved</label>
-            </div>
-            <div class="filter-actions">
-              <button class="btn primary" style="flex:1">Apply</button>
-              <button class="btn">Reset</button>
-            </div>
-          </div>
-
-          <div>
-            <div class="results-bar">
-              <span class="count">84 results</span>
-              <span class="chip" onclick="this.remove()">Logistics <span>✕</span></span>
-              <span class="chip" onclick="this.remove()">2–5 yrs in role <span>✕</span></span>
-              <span class="chip" onclick="this.remove()">Due for posting <span>✕</span></span>
-            </div>
-            <div class="panel">
-              <table class="data">
-                <thead><tr>
-                  <th>Name ▾</th><th>Dept</th><th>Role</th><th>Skills</th><th>Service</th><th>In role</th><th>Status</th>
-                </tr></thead>
-                <tbody id="findRows"></tbody>
-              </table>
-              <div class="pager"><span>‹</span><span class="on">1</span><span>2</span><span>3</span><span>…</span><span>9</span><span>›</span></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ======== VIEW: RECOMMENDATIONS ======== -->
-      <section id="view-recs" style="display:none">
-        <h1>Recommendations</h1>
-        <div class="page-sub">Ranked matches by skill fit, scope relevance and tenure readiness.</div>
-
-        <div class="rec-scope">
-          <div>
-            <div class="sec-title" style="margin-bottom:5px">Find candidates for job scope</div>
-            <select><option>Planning</option><option>Operations</option><option>Logistics</option><option>Procurement</option><option>Field Operations</option></select>
-          </div>
-          <button class="btn primary">Go</button>
-        </div>
-
-        <div class="panel" style="margin-bottom:20px">
-          <div class="panel-head"><span class="t">Ranked matches — Planning</span><span style="font-size:11.5px;color:var(--text-secondary)">Rule-based scoring · skills 50% / tenure 30% / scope 20%</span></div>
-          <div id="recCards"></div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-head"><span class="t">⚠ Due for posting — organisation</span><span class="pill neutral" data-min="3">org-wide view requires L3</span></div>
-          <table class="data">
-            <thead><tr><th>Name ▾</th><th>Dept</th><th>Role</th><th>Time in role</th><th>Status</th></tr></thead>
-            <tbody id="dueRows"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- ======== VIEW: REQUESTS (LIST) ======== -->
-      <section id="view-requests" style="display:none">
-        <h1>Transfer Requests</h1>
-        <div class="page-sub">Nothing moves without sign-off. All decisions are logged.</div>
-        <div class="tabs">
-          <button class="on">Received (3)</button>
-          <button>Sent (2)</button>
-        </div>
-        <div class="panel">
-          <table class="data">
-            <thead><tr><th>ID ▾</th><th>Person</th><th>From → To</th><th>Proposed role</th><th>Status</th><th>Age</th></tr></thead>
-            <tbody>
-              <tr onclick="openRequest()"><td>REQ-0043</td><td>A. Rahman</td><td>Operations → Planning</td><td>Snr Planner</td><td><span class="pill accent">● Pending you</span></td><td>2 days</td></tr>
-              <tr onclick="openRequest()"><td>REQ-0044</td><td>P. Nair</td><td>Operations → Field Unit</td><td>Team Lead</td><td><span class="pill accent">● Pending you</span></td><td>3 days</td></tr>
-              <tr onclick="openRequest()"><td>REQ-0045</td><td>D. Wong</td><td>Operations → Procurement</td><td>Buyer</td><td><span class="pill accent">● Pending you</span></td><td>4 days</td></tr>
-              <tr onclick="openRequest()"><td>REQ-0041</td><td>S. Lim</td><td>Logistics → Planning</td><td>Coordinator</td><td><span class="pill warn">◐ Pending HR</span></td><td>5 days</td></tr>
-              <tr onclick="openRequest()"><td>REQ-0038</td><td>K. Osei</td><td>Planning → Field Unit</td><td>Planner</td><td><span class="pill ok">✓ Approved</span></td><td>3 wks</td></tr>
-              <tr onclick="openRequest()"><td>REQ-0034</td><td>R. Iyer</td><td>Admin → Operations</td><td>Officer</td><td><span class="pill bad">✕ Declined</span></td><td>1 mo</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- ======== VIEW: REQUEST DETAIL ======== -->
-      <section id="view-reqdetail" style="display:none">
-        <h1>REQ-0043 — A. Rahman</h1>
-        <div class="page-sub">Submitted 10 Mar by R. Devi (Head, Planning) · <a style="color:var(--accent);cursor:pointer" onclick="go('requests', document.querySelector('[data-view=requests]'))">‹ Back to requests</a></div>
-        <div class="notice" id="reqNotice">✓ REQ-0043 approved — HR has been notified for final confirmation.</div>
-        <div class="req-grid">
-          <div class="panel req-detail">
-            <div class="sec-title">Request</div>
-            <dl class="kv">
-              <dt>Person</dt><dd><a style="color:var(--accent);cursor:pointer;font-weight:600" onclick="openProfile()">A. Rahman (EMP-0119)</a></dd>
-              <dt>From</dt><dd>Operations — <b>your department</b></dd>
-              <dt>To</dt><dd>Planning</dd>
-              <dt>Proposed role</dt><dd>Senior Planner</dd>
-              <dt>Start date</dt><dd>1 May</dd>
-            </dl>
-            <div class="sec-title">Justification</div>
-            <p style="font-size:13px;margin-bottom:16px">"Planning desk is short two planners for the Q3 exercise. Rahman has completed the planning conversion course and has been in his current role over three years — a strong developmental move."</p>
-            <div class="sec-title">Candidate snapshot <span style="font-weight:400;text-transform:none;letter-spacing:0">(within your clearance)</span></div>
-            <div style="margin-bottom:6px"><span class="tag">Planning</span><span class="tag">Logistics</span><span class="tag">Procurement</span><span class="tag">+2 more</span></div>
-            <dl class="kv" style="margin-top:10px">
-              <dt>Skills match</dt><dd>5 / 6 required</dd>
-              <dt>Time in role</dt><dd>3.1 years (threshold 3.5)</dd>
-              <dt>Last move</dt><dd>Feb 2022 — Operations</dd>
-              <dt>Service</dt><dd>8 years</dd>
-            </dl>
-          </div>
-          <div class="panel">
-            <div class="timeline">
-              <div class="sec-title">Approval timeline</div>
-              <div class="tl-item"><div class="tl-dot done"></div><div><b>Submitted</b> — R. Devi<div class="when">10 Mar, 09:41</div></div></div>
-              <div class="tl-item"><div class="tl-dot now"></div><div><b>Pending: your sign-off</b><div class="when">Waiting 2 days</div></div></div>
-              <div class="tl-item"><div class="tl-dot todo"></div><div>HR confirmation<div class="when">Next step</div></div></div>
-            </div>
-            <div class="decision" id="decisionBox">
-              <div class="sec-title">Your decision</div>
-              <textarea placeholder="Comments (required if declining)…"></textarea>
-              <div class="btns">
-                <button class="btn primary" onclick="decide()">✓ Approve</button>
-                <button class="btn">↩ Request info</button>
-                <button class="btn danger">✕ Decline</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ======== VIEW: PROFILE ======== -->
-      <section id="view-profile" style="display:none">
-        <h1>Personnel Profile</h1>
-        <div class="page-sub"><a style="color:var(--accent);cursor:pointer" onclick="go('find', document.querySelector('[data-view=find]'))">‹ Back to results</a></div>
-        <div class="panel">
-          <div class="prof-head">
-            <div class="prof-photo">SL</div>
-            <div class="info">
-              <div class="nm">S. Lim</div>
-              <div class="role">Coordinator · Logistics · EMP-0117</div>
-              <span class="tag">Clearance L2</span> <span class="pill warn">Due for posting</span>
-            </div>
-            <button class="btn primary" onclick="alert('Transfer request drafted for S. Lim (demo)')">⇄ Request Transfer</button>
-          </div>
-          <div class="tenure-block">
-            <div class="sec-title">Time in current role — 4.2 years <span style="font-weight:400;text-transform:none;letter-spacing:0">(posting threshold: 3.5 yrs ▪ marker)</span></div>
-            <div class="bar"><div class="fill" style="width:84%"></div><div class="marker" style="left:70%"></div></div>
-          </div>
-          <div class="prof-body">
-            <div class="tabs">
-              <button class="on">Overview</button>
-              <button>Posting History</button>
-              <button>Skills</button>
-              <button data-min="3">Notes (L3+)</button>
-            </div>
-            <table class="data">
-              <thead><tr><th>Period</th><th>Department</th><th>Role</th><th>Scope</th></tr></thead>
-              <tbody>
-                <tr><td>2021 — now</td><td>Logistics</td><td>Coordinator</td><td>Operations</td></tr>
-                <tr><td>2018 — 2021</td><td>Procurement</td><td>Executive</td><td>Procurement</td></tr>
-                <tr><td>2015 — 2018</td><td>Operations</td><td>Officer</td><td>Operations</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- ======== VIEW: ADMIN ======== -->
-      <section id="view-admin" style="display:none">
-        <h1>Admin Panel</h1>
-        <div class="page-sub">User clearance, posting rules and audit log. Restricted to L4.</div>
-        <div class="req-grid">
-          <div class="panel">
-            <div class="panel-head"><span class="t">Users & clearance</span></div>
-            <table class="data">
-              <thead><tr><th>User</th><th>Role</th><th>Clearance</th></tr></thead>
-              <tbody>
-                <tr><td>J. Tan</td><td>Head, Operations</td><td><span class="pill neutral">L2</span></td></tr>
-                <tr><td>R. Devi</td><td>Head, Planning</td><td><span class="pill neutral">L2</span></td></tr>
-                <tr><td>H. Farah</td><td>HR Officer</td><td><span class="pill accent">L3</span></td></tr>
-                <tr><td>sysadmin</td><td>Administrator</td><td><span class="pill ok">L4</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="panel">
-            <div class="panel-head"><span class="t">Posting thresholds (demo values)</span></div>
-            <div class="req-detail">
-              <dl class="kv">
-                <dt>Operations</dt><dd>3.5 yrs</dd>
-                <dt>Planning</dt><dd>3.0 yrs</dd>
-                <dt>Logistics</dt><dd>4.0 yrs</dd>
-              </dl>
-              <button class="btn small">Edit</button>
-            </div>
-            <div class="panel-head" style="border-top:1px solid var(--border)"><span class="t">Audit log (latest)</span></div>
-            <table class="data">
-              <tbody>
-                <tr><td>09:41</td><td>R. Devi</td><td>Submitted REQ-0043</td></tr>
-                <tr><td>09:12</td><td>J. Tan</td><td>Viewed profile EMP-0117</td></tr>
-                <tr><td>08:55</td><td>H. Farah</td><td>Confirmed REQ-0041</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <div class="foot-note">Posting Board · demo build · cream / orange-leather / dark-brown flat theme · runs fully offline</div>
+      <section id="view-dashboard"></section>
+      <section id="view-find" style="display:none"></section>
+      <section id="view-recs" style="display:none"></section>
+      <section id="view-requests" style="display:none"></section>
+      <section id="view-reqdetail" style="display:none"></section>
+      <section id="view-profile" style="display:none"></section>
+      <section id="view-admin" style="display:none"></section>
+      <div class="foot-note">Posting Board · full demo · cream / orange-leather / dark-brown flat theme · runs fully offline</div>
     </div>
   </div>
 </div>
 
-<!-- ============ QUICK-VIEW SIDE PANEL ============ -->
-<div class="qv" id="qv">
-  <div class="qv-head"><b>Quick view</b><button class="qv-close" onclick="closeQV()">✕</button></div>
-  <div class="qv-body" id="qvBody"></div>
-</div>
+<!-- quick view / modal / toast / notifications -->
+<div class="qv" id="qv"><div class="qv-head"><b>Quick view</b><button class="qv-close" onclick="closeQV()">✕</button></div><div class="qv-body" id="qvBody"></div></div>
+<div class="modal-bg" id="modalBg"><div class="modal"><div class="modal-head"><b id="modalTitle">Request Transfer</b><button class="qv-close" onclick="closeModal()">✕</button></div><div class="modal-body" id="modalBody"></div></div></div>
+<div class="notif-drop" id="notifDrop"></div>
+<div class="toast" id="toast"></div>
 
 <script>
-  /* ---------- demo data ---------- */
-  const people = [
-    { n:"S. Lim",    d:"Logistics",   r:"Coordinator",  sk:["Logistics","Procurement","Planning"], svc:"9.0 y", t:"4.2 y", tw:84, st:"warn",   sl:"Due for posting" },
-    { n:"K. Osei",   d:"Planning",    r:"Planner",      sk:["Planning","Analysis"],                svc:"7.5 y", t:"3.9 y", tw:79, st:"warn",   sl:"Due for posting" },
-    { n:"A. Rahman", d:"Operations",  r:"Exec Officer", sk:["Planning","Logistics","Procurement"], svc:"8.0 y", t:"3.1 y", tw:62, st:"accent", sl:"On request" },
-    { n:"M. Chen",   d:"Logistics",   r:"Storekeeper",  sk:["Logistics","Inventory"],              svc:"5.0 y", t:"2.4 y", tw:48, st:"ok",     sl:"Eligible" },
-    { n:"P. Nair",   d:"Operations",  r:"Officer",      sk:["Field Ops","Logistics"],              svc:"6.2 y", t:"2.9 y", tw:58, st:"ok",     sl:"Eligible" },
-    { n:"D. Wong",   d:"Procurement", r:"Buyer",        sk:["Procurement","Contracts"],            svc:"4.4 y", t:"2.1 y", tw:42, st:"ok",     sl:"Eligible" },
-  ];
-  const recs = [
-    { n:"A. Rahman", score:87, why:"Skills match 5/6 · scope-relevant · 3.1 yrs in role — due soon", t:"3.1 y" },
-    { n:"M. Chen",   score:74, why:"Skills match 4/6 · logistics background transfers well · 2.4 yrs in role", t:"2.4 y" },
-    { n:"P. Nair",   score:68, why:"Skills match 4/6 · strong field record · 2.9 yrs in role", t:"2.9 y" },
-    { n:"D. Wong",   score:52, why:"Skills match 3/6 · recently moved — lower readiness", t:"2.1 y" },
-  ];
+/* ================= DATA ================= */
+const SKILLS = ["Logistics","Procurement","Planning","Field Operations","Administration","Analysis","Inventory","Contracts","Training","Communications"];
+const DEPTS  = ["Operations","Planning","Logistics","Procurement","Field Unit","Administration"];
+const SCOPES = ["Operations","Planning","Logistics","Procurement","Field Operations","Administration"];
+const SCOPE_SKILLS = {
+  "Operations":["Field Operations","Logistics","Administration"],
+  "Planning":["Planning","Analysis","Logistics"],
+  "Logistics":["Logistics","Inventory","Procurement"],
+  "Procurement":["Procurement","Contracts","Analysis"],
+  "Field Operations":["Field Operations","Logistics","Training"],
+  "Administration":["Administration","Communications","Contracts"]
+};
+const DEPT_SCOPE = {"Operations":"Operations","Planning":"Planning","Logistics":"Logistics","Procurement":"Procurement","Field Unit":"Field Operations","Administration":"Administration"};
+const ROLES = {"Operations":["Officer","Exec Officer","Team Lead"],"Planning":["Planner","Snr Planner","Analyst"],"Logistics":["Storekeeper","Coordinator","Driver Supv"],"Procurement":["Buyer","Contracts Exec","Purchaser"],"Field Unit":["Field Officer","Team Lead","Instructor"],"Administration":["Clerk","Admin Officer","Secretary"]};
+let TH = {"Operations":3.5,"Planning":3.0,"Logistics":4.0,"Procurement":3.5,"Field Operations":3.0,"Administration":4.0};
 
-  /* ---------- render: find table ---------- */
-  const findRows = document.getElementById('findRows');
-  people.forEach((p,i) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td><b>${p.n}</b></td><td>${p.d}</td><td>${p.r}</td>
-      <td>${p.sk.slice(0,2).map(s=>`<span class="tag">${s}</span>`).join('')}${p.sk.length>2?`<span class="tag">+${p.sk.length-2}</span>`:''}</td>
-      <td>${p.svc}</td>
-      <td><div class="bar-wrap"><div class="bar" style="width:80px"><div class="fill ${p.st==='ok'?'ok':''}" style="width:${p.tw}%"></div><div class="marker" style="left:70%"></div></div><span class="val">${p.t}</span></div></td>
-      <td><span class="pill ${p.st}">${p.sl}</span></td>`;
-    tr.onclick = () => openQV(p);
-    findRows.appendChild(tr);
-  });
+const USERS = [
+  { id:"okafor", nm:"K. Okafor", rl:"Supervisor, Operations", cl:1, dept:"Operations", av:"KO" },
+  { id:"tan",    nm:"J. Tan",    rl:"Head, Operations",       cl:2, dept:"Operations", av:"JT" },
+  { id:"devi",   nm:"R. Devi",   rl:"Head, Planning",         cl:2, dept:"Planning",   av:"RD" },
+  { id:"farah",  nm:"H. Farah",  rl:"HR Officer",             cl:3, dept:"HR",         av:"HF" },
+  { id:"admin",  nm:"Sys Admin", rl:"Administrator",          cl:4, dept:"IT",         av:"SA" }
+];
+const DEPT_MANAGER = {"Operations":"tan","Planning":"devi","Logistics":"farah","Procurement":"farah","Field Unit":"farah","Administration":"farah"};
 
-  /* ---------- render: recommendation cards ---------- */
-  const recCards = document.getElementById('recCards');
-  recs.forEach((r,i) => {
-    const div = document.createElement('div');
-    div.className = 'rec-card';
-    div.innerHTML = `<div class="rec-rank">${i+1}</div>
-      <div class="avatar" style="width:34px;height:34px">${r.n.split(' ').map(x=>x[0]).join('').replace('.','')}</div>
-      <div class="rec-info"><div class="nm">${r.n}</div><div class="why">${r.why}</div></div>
-      <div class="rec-score"><div class="bar-wrap"><div class="bar"><div class="fill" style="width:${r.score}%"></div></div><span class="val">${r.score}%</span></div></div>
-      <div class="rec-actions"><button class="btn small" onclick="openProfile()">Profile</button><button class="btn primary small" onclick="alert('Transfer request drafted for ${r.n} (demo)')">Request</button></div>`;
-    recCards.appendChild(div);
-  });
+/* --- personnel (handcrafted anchors + generated) --- */
+let seed = 42;
+function rnd(){ seed = (seed*9301+49297) % 233280; return seed/233280; }
+function pick(a){ return a[Math.floor(rnd()*a.length)]; }
+function r1(x){ return Math.round(x*10)/10; }
 
-  /* ---------- render: due-for-posting table ---------- */
-  const dueRows = document.getElementById('dueRows');
-  people.filter(p=>p.st==='warn'||p.st==='accent').forEach(p => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td><b>${p.n}</b></td><td>${p.d}</td><td>${p.r}</td>
-      <td><div class="bar-wrap"><div class="bar" style="width:110px"><div class="fill" style="width:${p.tw}%"></div><div class="marker" style="left:70%"></div></div><span class="val">${p.t}</span></div></td>
-      <td><span class="pill ${p.st}">${p.sl}</span></td>`;
-    tr.onclick = () => openProfile();
-    dueRows.appendChild(tr);
-  });
+const PERSONNEL = [];
+function addP(name, dept, svc, tir, skills, notes){
+  const id = "EMP-" + String(101 + PERSONNEL.length).padStart(4,"0");
+  const hist = [];
+  let yr = 2025 - Math.round(tir);
+  hist.push({ period: yr + " — now", dept, role: pick(ROLES[dept]), scope: DEPT_SCOPE[dept] });
+  let rem = svc - tir, d2 = pick(DEPTS);
+  while (rem > 1) { const span = Math.min(rem, 1 + Math.floor(rnd()*4));
+    hist.push({ period: (yr-span) + " — " + yr, dept: d2, role: pick(ROLES[d2]), scope: DEPT_SCOPE[d2] });
+    yr -= span; rem -= span; d2 = pick(DEPTS); }
+  PERSONNEL.push({ id, name, dept, role: hist[0].role, scope: DEPT_SCOPE[dept], skills, svc, tir,
+    cl: 1 + Math.floor(rnd()*2), history: hist, notes: notes || "Consistent performer. Development discussion held at last review.",
+    lastMove: "Mar " + yr });
+}
+addP("S. Lim","Logistics",9.0,4.2,["Logistics","Procurement","Planning"],"Strong coordinator; flagged for planner conversion course.");
+addP("A. Rahman","Operations",8.0,3.1,["Planning","Logistics","Procurement","Analysis","Field Operations"]);
+addP("K. Osei","Planning",7.5,3.9,["Planning","Analysis","Communications"]);
+addP("P. Nair","Operations",6.2,2.9,["Field Operations","Logistics","Training"]);
+addP("D. Wong","Procurement",4.4,2.1,["Procurement","Contracts","Administration"]);
+addP("M. Chen","Logistics",5.0,2.4,["Logistics","Inventory","Planning"]);
+addP("R. Iyer","Administration",3.8,1.8,["Administration","Communications"]);
 
-  /* ---------- view switching ---------- */
-  const titles = { dashboard:"Dashboard", find:"Find Personnel", recs:"Recommendations", requests:"Requests", reqdetail:"Requests › REQ-0043", profile:"Personnel › S. Lim", admin:"Admin Panel" };
-  function go(view, link) {
-    document.querySelectorAll('.content section').forEach(s => s.style.display = 'none');
-    document.getElementById('view-' + view).style.display = 'block';
-    document.querySelectorAll('.nav a').forEach(a => a.classList.remove('active'));
-    if (link) link.classList.add('active');
-    document.getElementById('crumb').innerHTML = '<b>' + titles[view] + '</b>';
-    closeQV();
-    window.scrollTo(0,0);
-  }
-  function openRequest() { go('reqdetail', document.querySelector('[data-view=requests]')); }
-  function openProfile() { go('profile', document.querySelector('[data-view=find]')); }
+const FIRST=["Aisha","Ben","Chloe","Daniel","Elena","Farid","Grace","Hassan","Ivy","Jamal","Mei","Nathan","Olivia","Priya","Ravi","Sara","Tomas","Uma","Victor","Wendy","Xiao","Yusuf","Zara","Arun","Cindy","Ethan","Fatima","Hui","Ivan","Jia","Lena","Muthu","Nina","Oscar","Qing","Siti","Ting","Vani","Wei","Bala","Goh"];
+const LASTN=["Lim","Tan","Chen","Rahman","Ng","Kaur","Das","Ali","Lee","Pillai","Chong","Yap","Ho","Teo","Sim","Foo","Loh","Chan","Krishnan","Menon","Sundaram","Khan","Pereira","Fernandez"];
+for (let i = PERSONNEL.length; i < 48; i++) {
+  const dept = pick(DEPTS);
+  const pool = SCOPE_SKILLS[DEPT_SCOPE[dept]].concat(SKILLS.filter(s=>rnd()<0.25));
+  const sk = [...new Set([pick(pool), pick(pool), pick(pool)])].slice(0, 2 + Math.floor(rnd()*2));
+  addP(FIRST[i % FIRST.length][0] + ". " + pick(LASTN), dept, r1(1 + rnd()*17), r1(0.3 + rnd()*5.8), sk);
+}
 
-  /* ---------- quick view panel ---------- */
-  function openQV(p) {
-    document.getElementById('qvBody').innerHTML = `
-      <div style="display:flex;gap:12px;align-items:center;margin-bottom:14px">
-        <div class="avatar" style="width:44px;height:44px;font-size:14px">${p.n.split(' ').map(x=>x[0]).join('').replace('.','')}</div>
-        <div><div style="font-weight:700;font-size:15px">${p.n}</div><div style="font-size:12px;color:var(--text-secondary)">${p.r} · ${p.d}</div></div>
+/* --- workflow seed --- */
+let reqCounter = 46;
+const REQUESTS = [
+  { id:"REQ-0045", person:"EMP-0104", from:"Procurement", to:"Operations", role:"Team Lead", start:"2025-05-01",
+    just:"Need an experienced buyer profile on the ops desk for the Q3 contract cycle.", requester:"tan",
+    status:"pending-manager", events:[{t:"08 Mar, 10:12", by:"J. Tan", txt:"Submitted request"}], comment:"" },
+  { id:"REQ-0044", person:"EMP-0103", from:"Operations", to:"Field Unit", role:"Team Lead", start:"2025-05-01",
+    just:"Field Unit short one team lead; Nair has instructor qualification.", requester:"farah",
+    status:"pending-manager", events:[{t:"09 Mar, 15:03", by:"H. Farah", txt:"Submitted request"}], comment:"" },
+  { id:"REQ-0043", person:"EMP-0101", from:"Operations", to:"Planning", role:"Senior Planner", start:"2025-05-01",
+    just:"Planning desk short two planners for Q3 exercise. Rahman completed the planning conversion course and is due for a developmental move.", requester:"devi",
+    status:"pending-manager", events:[{t:"10 Mar, 09:41", by:"R. Devi", txt:"Submitted request"}], comment:"" },
+  { id:"REQ-0041", person:"EMP-0100", from:"Logistics", to:"Planning", role:"Coordinator", start:"2025-04-15",
+    just:"Lim is past posting threshold and has planner aptitude.", requester:"devi",
+    status:"pending-hr", events:[{t:"05 Mar, 11:20", by:"R. Devi", txt:"Submitted request"},{t:"07 Mar, 09:02", by:"H. Farah", txt:"Manager sign-off — approved"}], comment:"" },
+  { id:"REQ-0038", person:"EMP-0102", from:"Planning", to:"Field Unit", role:"Planner", start:"2025-03-01",
+    just:"Rotation after 3.9 yrs in role.", requester:"farah",
+    status:"approved", events:[{t:"18 Feb, 09:00", by:"H. Farah", txt:"Submitted request"},{t:"19 Feb, 14:22", by:"R. Devi", txt:"Manager sign-off — approved"},{t:"21 Feb, 10:05", by:"H. Farah", txt:"HR confirmation — move executed"}], comment:"" },
+  { id:"REQ-0034", person:"EMP-0106", from:"Administration", to:"Operations", role:"Officer", start:"2025-02-01",
+    just:"Requested for ops desk coverage.", requester:"tan",
+    status:"declined", events:[{t:"02 Feb, 08:50", by:"J. Tan", txt:"Submitted request"},{t:"04 Feb, 16:40", by:"H. Farah", txt:"Declined — department below minimum manning"}], comment:"Department below minimum manning until June intake." }
+];
+const NOTIFS = [
+  { user:"tan",   txt:"REQ-0043 (A. Rahman) awaits your sign-off", when:"10 Mar, 09:41", read:false, ref:"REQ-0043" },
+  { user:"tan",   txt:"REQ-0044 (P. Nair) awaits your sign-off", when:"09 Mar, 15:03", read:false, ref:"REQ-0044" },
+  { user:"tan",   txt:"REQ-0034 (R. Iyer) was declined", when:"04 Feb, 16:40", read:true, ref:"REQ-0034" },
+  { user:"devi",  txt:"REQ-0041 (S. Lim) approved by manager — pending HR", when:"07 Mar, 09:02", read:false, ref:"REQ-0041" },
+  { user:"farah", txt:"REQ-0041 (S. Lim) awaits HR confirmation", when:"07 Mar, 09:02", read:false, ref:"REQ-0041" },
+  { user:"admin", txt:"3 requests currently in flight", when:"12 Mar, 08:00", read:false, ref:null }
+];
+const AUDIT = [
+  { t:"12 Mar, 09:41", u:"R. Devi", a:"Submitted REQ-0043" },
+  { t:"12 Mar, 09:12", u:"J. Tan", a:"Viewed profile EMP-0100" },
+  { t:"12 Mar, 08:55", u:"H. Farah", a:"Manager sign-off REQ-0041" },
+  { t:"12 Mar, 08:31", u:"J. Tan", a:"Signed in" }
+];
+
+/* ================= STATE ================= */
+let U = null;                       // current user
+let selAcct = "tan";
+let view = "dashboard";
+let curProfile = null, curReq = null, profTab = 0, reqTab = "received", recScope = "Planning";
+const PAGE_SIZE = 8;
+let F = { skills:new Set(), svcMin:0, svcMax:20, tirMin:0, tirMax:8, scope:"Any", status:new Set(), q:"" };
+let sort = { key:"tir", dir:-1 }, page = 1;
+
+/* ================= HELPERS ================= */
+const $ = id => document.getElementById(id);
+const P = id => PERSONNEL.find(p => p.id === id);
+const userById = id => USERS.find(u => u.id === id);
+function now(){ return "12 Mar, " + new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"}); }
+function initials(n){ return n.split(" ").map(x=>x[0]).join("").replace(".","").slice(0,2).toUpperCase(); }
+function openReqFor(pid){ return REQUESTS.find(r => r.person === pid && (r.status==="pending-manager"||r.status==="pending-hr")); }
+function statusOf(p){
+  if (openReqFor(p.id)) return { k:"accent", l:"On request" };
+  const th = TH[p.scope] || 3.5;
+  if (p.tir >= th) return { k:"warn", l:"Due for posting" };
+  if (p.tir < 1)   return { k:"neutral", l:"Recently moved" };
+  return { k:"ok", l:"Eligible" };
+}
+function barHTML(p, w){
+  const th = TH[p.scope] || 3.5;
+  const fill = Math.min(p.tir/5,1)*100, mk = Math.min(th/5,1)*100;
+  const okCls = statusOf(p).k === "ok" ? " ok" : "";
+  return `<div class="bar-wrap"><div class="bar" style="width:${w||110}px"><div class="fill${okCls}" style="width:${fill}%"></div><div class="marker" style="left:${mk}%"></div></div><span class="val">${p.tir.toFixed(1)} y</span></div>`;
+}
+function pill(st){ return `<span class="pill ${st.k}">${st.l}</span>`; }
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._x); t._x=setTimeout(()=>t.classList.remove("show"),2800); }
+function audit(u,a){ AUDIT.unshift({ t:now(), u, a }); }
+function notify(user, txt, ref){ NOTIFS.unshift({ user, txt, when:now(), read:false, ref }); renderBell(); }
+function statusLabel(s){ return {"pending-manager":"Pending manager","pending-hr":"Pending HR","approved":"Approved","declined":"Declined","withdrawn":"Withdrawn"}[s]; }
+function statusPill(s){ const m={"pending-manager":"accent","pending-hr":"warn","approved":"ok","declined":"bad","withdrawn":"neutral"}; return `<span class="pill ${m[s]}">${statusLabel(s)}</span>`; }
+
+/* clearance-gated visibility */
+function visiblePeople(){
+  let list = PERSONNEL;
+  if (U.cl === 1) list = list.filter(p => p.dept === U.dept);
+  return list;
+}
+function dueList(){
+  let list = visiblePeople().filter(p => statusOf(p).k === "warn");
+  if (U.cl === 2) list = list.filter(p => p.dept === U.dept);
+  return list.sort((a,b)=>b.tir-a.tir);
+}
+function pendingForMe(){
+  return REQUESTS.filter(r =>
+    (r.status==="pending-manager" && DEPT_MANAGER[r.from]===U.id) ||
+    (r.status==="pending-hr" && U.cl>=3));
+}
+function myRequests(){ return REQUESTS.filter(r => r.requester===U.id); }
+
+/* ================= LOGIN ================= */
+function renderAccts(){
+  $("acctList").innerHTML = USERS.map(u=>`
+    <div class="acct ${u.id===selAcct?'sel':''}" onclick="selAcct='${u.id}';renderAccts()">
+      <div class="avatar ${u.cl<3?'brown':''}">${u.av}</div>
+      <div class="who"><div class="nm">${u.nm}</div><div class="rl">${u.rl}</div></div>
+      <span class="pill ${u.cl>=3?'accent':'neutral'}">L${u.cl}</span>
+    </div>`).join("");
+}
+function doLogin(){
+  U = userById(selAcct);
+  $("login").style.display="none"; $("shell").classList.remove("hidden");
+  document.body.dataset.cl = U.cl;
+  $("userAv").textContent = U.av; $("userNm").textContent = U.nm; $("userRl").textContent = U.rl;
+  $("clPill").textContent = "Clearance L" + U.cl;
+  const isAdmin = U.cl >= 4;
+  $("adminLabel").classList.toggle("hidden", !isAdmin);
+  $("adminLink").classList.toggle("hidden", !isAdmin);
+  audit(U.nm, "Signed in");
+  go("dashboard");
+  renderBell();
+  toast("Signed in as " + U.nm + " (L" + U.cl + ")");
+}
+function logout(){ location.reload(); }
+function toggleUserMenu(e){ e.stopPropagation(); $("userMenu").style.display = $("userMenu").style.display==="block" ? "none" : "block"; }
+document.addEventListener("click", ()=>{ $("userMenu").style.display="none"; $("notifDrop").classList.remove("show"); });
+
+/* ================= NAV ================= */
+const TITLES = { dashboard:"Dashboard", find:"Find Personnel", recs:"Recommendations", requests:"Requests", reqdetail:"Requests › Detail", profile:"Personnel › Profile", admin:"Admin Panel" };
+function go(v){
+  view = v;
+  document.querySelectorAll(".content section").forEach(s=>s.style.display="none");
+  $("view-"+v).style.display="block";
+  document.querySelectorAll(".nav a").forEach(a=>a.classList.toggle("active", a.dataset.view===v || (v==="reqdetail"&&a.dataset.view==="requests") || (v==="profile"&&a.dataset.view==="find")));
+  $("crumb").innerHTML = "<b>"+TITLES[v]+"</b>";
+  closeQV(); window.scrollTo(0,0);
+  ({dashboard:renderDashboard, find:renderFind, recs:renderRecs, requests:renderRequests, reqdetail:renderReqDetail, profile:renderProfile, admin:renderAdmin})[v]();
+}
+
+/* ================= NOTIFICATIONS ================= */
+function renderBell(){
+  const mine = NOTIFS.filter(n=>n.user===U.id);
+  const unread = mine.filter(n=>!n.read).length;
+  $("bellDot").textContent = unread;
+  $("bellDot").classList.toggle("hidden", unread===0);
+  const pend = pendingForMe().length;
+  $("navReqBadge").textContent = pend;
+  $("navReqBadge").classList.toggle("hidden", pend===0);
+}
+function toggleNotifs(e){
+  e.stopPropagation();
+  const d = $("notifDrop");
+  if (d.classList.contains("show")) { d.classList.remove("show"); return; }
+  const mine = NOTIFS.filter(n=>n.user===U.id).slice(0,8);
+  d.innerHTML = `<div class="panel-head"><span class="t">Notifications</span></div>` +
+    (mine.length ? mine.map(n=>`<div class="notif-item ${n.read?'':'unread'}" onclick="notifClick('${n.ref}')">${n.txt}<div class="when">${n.when}</div></div>`).join("") : `<div class="empty">No notifications.</div>`);
+  d.classList.add("show");
+  NOTIFS.forEach(n=>{ if(n.user===U.id) n.read=true; });
+  setTimeout(renderBell, 300);
+}
+function notifClick(ref){ if(ref){ const r=REQUESTS.find(x=>x.id===ref); if(r){ curReq=r.id; go("reqdetail"); } } }
+
+/* ================= DASHBOARD ================= */
+function renderDashboard(){
+  const scope = visiblePeople();
+  const due = dueList().slice(0,5);
+  const pend = pendingForMe();
+  const mine = myRequests().filter(r=>r.status==="pending-manager"||r.status==="pending-hr");
+  $("view-dashboard").innerHTML = `
+    <h1>Good morning, ${U.nm}</h1>
+    <div class="page-sub">${U.rl} · Tuesday, 12 March ${pend.length?`· <b>${pend.length} request${pend.length>1?"s":""}</b> awaiting action`:"· all caught up"}</div>
+    <div class="stat-grid">
+      <div class="panel stat"><div class="num brown">${scope.length}</div><div class="lbl">Personnel ${U.cl>=3?"in organisation":U.cl===2?"in your department":"visible to you"}</div></div>
+      <div class="panel stat"><div class="num">${dueList().length}</div><div class="lbl">Due for posting</div></div>
+      <div class="panel stat"><div class="num">${pend.length}</div><div class="lbl">Pending your approval</div></div>
+      <div class="panel stat"><div class="num brown">${mine.length}</div><div class="lbl">Your open requests</div></div>
+    </div>
+    <div class="dash-grid">
+      <div class="panel">
+        <div class="panel-head"><span class="t">⚠ Due for posting ${U.cl>=3?"— organisation":"— "+(U.cl===2?U.dept:"your scope")}</span><a onclick="go('recs')">View all →</a></div>
+        ${due.length?`<table class="data"><thead><tr><th>Name</th><th>Dept</th><th>Role</th><th>Time in role</th><th>Status</th></tr></thead><tbody>
+          ${due.map(p=>`<tr onclick="openProfile('${p.id}')"><td><b>${p.name}</b></td><td>${p.dept}</td><td>${p.role}</td><td>${barHTML(p)}</td><td>${pill(statusOf(p))}</td></tr>`).join("")}
+        </tbody></table>`:`<div class="empty">Nobody currently past threshold. 🎉</div>`}
       </div>
-      <span class="pill ${p.st}" style="margin-bottom:14px">${p.sl}</span>
-      <div class="sec-title" style="margin-top:14px">Time in role</div>
-      <div class="bar-wrap" style="margin-bottom:14px"><div class="bar" style="flex:1"><div class="fill" style="width:${p.tw}%"></div><div class="marker" style="left:70%"></div></div><span class="val">${p.t}</span></div>
-      <div class="sec-title">Skills</div>
-      <div style="margin-bottom:14px">${p.sk.map(s=>`<span class="tag">${s}</span>`).join('')}</div>
-      <dl class="kv"><dt>Service</dt><dd>${p.svc}</dd><dt>Department</dt><dd>${p.d}</dd></dl>
-      <div style="display:flex;gap:8px">
-        <button class="btn" onclick="openProfile()">Full profile</button>
-        <button class="btn primary" onclick="alert('Transfer request drafted for ${p.n} (demo)')">⇄ Request Transfer</button>
-      </div>`;
-    document.getElementById('qv').classList.add('open');
-  }
-  function closeQV() { document.getElementById('qv').classList.remove('open'); }
+      <div class="panel">
+        <div class="panel-head"><span class="t">⏳ Awaiting your sign-off</span><a onclick="go('requests')">All →</a></div>
+        ${pend.length?pend.map(r=>{const p=P(r.person);return `<div class="appr-card">
+          <div class="top"><span class="who">${p.name}</span><span class="pill accent">${r.id}</span></div>
+          <div class="meta">${r.from} → ${r.to} · ${r.role} · by ${userById(r.requester).nm}</div>
+          <button class="btn primary small" onclick="curReq='${r.id}';go('reqdetail')">Review</button></div>`;}).join("")
+        :`<div class="empty">Nothing awaiting your decision.</div>`}
+      </div>
+    </div>`;
+}
 
-  /* ---------- approval decision ---------- */
-  function decide() {
-    document.getElementById('reqNotice').classList.add('show');
-    document.getElementById('decisionBox').innerHTML = '<div class="sec-title">Your decision</div><span class="pill ok">✓ Approved — sent to HR</span>';
-    window.scrollTo(0,0);
-  }
+/* ================= FIND PERSONNEL ================= */
+function renderFind(){
+  const skillsHTML = SKILLS.map(s=>`<label class="cb"><input type="checkbox" ${F.skills.has(s)?"checked":""} onchange="toggleSkill('${s}',this.checked)"> ${s}</label>`).join("");
+  const statusOpts = ["Due for posting","Eligible","Recently moved","On request"];
+  const statusHTML = statusOpts.map(s=>`<label class="cb"><input type="checkbox" ${F.status.has(s)?"checked":""} onchange="toggleStatus('${s}',this.checked)"> ${s}</label>`).join("");
+  $("view-find").innerHTML = `
+    <h1>Find Personnel</h1>
+    <div class="page-sub">Search and filter across ${U.cl===1?"your department":"departments"}. Results respect clearance level <b>L${U.cl}</b>.</div>
+    <div class="find-grid">
+      <div class="panel filters">
+        <div class="f-group"><div class="sec-title">Skills</div>${skillsHTML}</div>
+        <div class="f-group"><div class="sec-title">Years of service</div>
+          Min <input type="range" min="0" max="20" value="${F.svcMin}" oninput="F.svcMin=+this.value;$('sv').textContent=F.svcMin+' – '+F.svcMax+' yrs';applyFilters()">
+          Max <input type="range" min="0" max="20" value="${F.svcMax}" oninput="F.svcMax=+this.value;$('sv').textContent=F.svcMin+' – '+F.svcMax+' yrs';applyFilters()">
+          <div class="range-lbl"><span id="sv">${F.svcMin} – ${F.svcMax} yrs</span></div></div>
+        <div class="f-group"><div class="sec-title">Time in current role</div>
+          Min <input type="range" min="0" max="8" value="${F.tirMin}" oninput="F.tirMin=+this.value;$('tv').textContent=F.tirMin+' – '+F.tirMax+' yrs';applyFilters()">
+          Max <input type="range" min="0" max="8" value="${F.tirMax}" oninput="F.tirMax=+this.value;$('tv').textContent=F.tirMin+' – '+F.tirMax+' yrs';applyFilters()">
+          <div class="range-lbl"><span id="tv">${F.tirMin} – ${F.tirMax} yrs</span></div></div>
+        <div class="f-group"><div class="sec-title">Job scope</div>
+          <select onchange="F.scope=this.value;applyFilters()">${["Any",...SCOPES].map(s=>`<option ${F.scope===s?"selected":""}>${s}</option>`).join("")}</select></div>
+        <div class="f-group"><div class="sec-title">Status</div>${statusHTML}</div>
+        <div class="filter-actions"><button class="btn" style="flex:1" onclick="resetFilters()">Reset all</button></div>
+      </div>
+      <div>
+        <div class="results-bar" id="chipsBar"></div>
+        <div class="panel"><table class="data"><thead><tr id="findHead"></tr></thead><tbody id="findBody"></tbody></table><div class="pager" id="pager"></div></div>
+      </div>
+    </div>`;
+  renderFindResults();
+}
+function toggleSkill(s,on){ on?F.skills.add(s):F.skills.delete(s); applyFilters(); }
+function toggleStatus(s,on){ on?F.status.add(s):F.status.delete(s); applyFilters(); }
+function applyFilters(){ page=1; renderFindResults(); }
+function resetFilters(){ F={skills:new Set(),svcMin:0,svcMax:20,tirMin:0,tirMax:8,scope:"Any",status:new Set(),q:F.q}; page=1; renderFind(); }
+function topSearchInput(v){ F.q=v.toLowerCase(); if(view!=="find") go("find"); else { page=1; renderFindResults(); } }
+function filteredPeople(){
+  return visiblePeople().filter(p=>{
+    if (F.q && !(p.name.toLowerCase().includes(F.q)||p.id.toLowerCase().includes(F.q)||p.skills.some(s=>s.toLowerCase().includes(F.q)))) return false;
+    if (F.skills.size && !p.skills.some(s=>F.skills.has(s))) return false;
+    if (p.svc < F.svcMin || p.svc > F.svcMax) return false;
+    if (p.tir < F.tirMin || p.tir > F.tirMax) return false;
+    if (F.scope!=="Any" && p.scope!==F.scope) return false;
+    if (F.status.size && !F.status.has(statusOf(p).l)) return false;
+    return true;
+  });
+}
+function sortTh(label,key){
+  const arrow = sort.key===key ? (sort.dir===1?" ▲":" ▼") : "";
+  return `<th onclick="setSort('${key}')">${label}${arrow}</th>`;
+}
+function setSort(k){ if(sort.key===k) sort.dir*=-1; else { sort.key=k; sort.dir=1; } renderFindResults(); }
+function renderFindResults(){
+  let list = filteredPeople();
+  const key = sort.key;
+  list.sort((a,b)=>{
+    let va,vb;
+    if(key==="name"){va=a.name;vb=b.name;} else if(key==="dept"){va=a.dept;vb=b.dept;}
+    else if(key==="svc"){va=a.svc;vb=b.svc;} else if(key==="tir"){va=a.tir;vb=b.tir;}
+    else {va=statusOf(a).l;vb=statusOf(b).l;}
+    return (va<vb?-1:va>vb?1:0)*sort.dir;
+  });
+  const pages = Math.max(1, Math.ceil(list.length/PAGE_SIZE));
+  if (page>pages) page=pages;
+  const rows = list.slice((page-1)*PAGE_SIZE, page*PAGE_SIZE);
 
-  /* ---------- clearance gating ---------- */
-  function setClearance(v) {
-    document.body.dataset.cl = v;
-    document.getElementById('clLabel').textContent = 'L' + v;
-    document.querySelectorAll('[data-min]').forEach(el => {
-      el.classList.toggle('hidden-cl', parseInt(el.dataset.min) > parseInt(v));
-    });
-    if (v < 4 && document.getElementById('view-admin').style.display !== 'none') {
-      go('dashboard', document.querySelector('[data-view=dashboard]'));
-    }
+  $("findHead").innerHTML = sortTh("Name","name")+sortTh("Dept","dept")+"<th>Role</th><th>Skills</th>"+(U.cl>=2?sortTh("Service","svc"):"")+sortTh("In role","tir")+sortTh("Status","status");
+  $("findBody").innerHTML = rows.length ? rows.map(p=>{const st=statusOf(p);return `<tr onclick="openQV('${p.id}')">
+    <td><b>${p.name}</b><div style="font-size:10.5px;color:var(--text-secondary)">${p.id}</div></td>
+    <td>${p.dept}</td><td>${p.role}</td>
+    <td>${p.skills.slice(0,2).map(s=>`<span class="tag">${s}</span>`).join("")}${p.skills.length>2?`<span class="tag">+${p.skills.length-2}</span>`:""}</td>
+    ${U.cl>=2?`<td>${p.svc.toFixed(1)} y</td>`:""}
+    <td>${barHTML(p,80)}</td><td>${pill(st)}</td></tr>`;}).join("")
+    : `<tr><td colspan="8"><div class="empty">No personnel match these filters.</div></td></tr>`;
+
+  /* chips */
+  const chips = [];
+  F.skills.forEach(s=>chips.push(`<span class="chip" onclick="toggleSkill('${s}',false);renderFind()">${s} ✕</span>`));
+  F.status.forEach(s=>chips.push(`<span class="chip" onclick="toggleStatus('${s}',false);renderFind()">${s} ✕</span>`));
+  if (F.scope!=="Any") chips.push(`<span class="chip" onclick="F.scope='Any';renderFind()">Scope: ${F.scope} ✕</span>`);
+  if (F.svcMin>0||F.svcMax<20) chips.push(`<span class="chip" onclick="F.svcMin=0;F.svcMax=20;renderFind()">Service ${F.svcMin}–${F.svcMax}y ✕</span>`);
+  if (F.tirMin>0||F.tirMax<8) chips.push(`<span class="chip" onclick="F.tirMin=0;F.tirMax=8;renderFind()">In role ${F.tirMin}–${F.tirMax}y ✕</span>`);
+  $("chipsBar").innerHTML = `<span class="count">${list.length} result${list.length!==1?"s":""}</span>` + chips.join("");
+
+  /* pager */
+  let pg = `<span onclick="if(page>1){page--;renderFindResults()}">‹</span>`;
+  for(let i=1;i<=Math.min(pages,6);i++) pg += `<span class="${i===page?'on':''}" onclick="page=${i};renderFindResults()">${i}</span>`;
+  if(pages>6) pg += `<span>…</span><span onclick="page=${pages};renderFindResults()">${pages}</span>`;
+  pg += `<span onclick="if(page<${pages}){page++;renderFindResults()}">›</span>`;
+  $("pager").innerHTML = pg;
+}
+
+/* ================= QUICK VIEW ================= */
+function openQV(pid){
+  const p = P(pid); const st = statusOf(p); const oq = openReqFor(pid);
+  audit(U.nm, "Quick-viewed " + pid);
+  $("qvBody").innerHTML = `
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+      <div class="avatar brown" style="width:44px;height:44px;font-size:14px">${initials(p.name)}</div>
+      <div><div style="font-weight:700;font-size:15px">${p.name}</div><div style="font-size:12px;color:var(--text-secondary)">${p.role} · ${p.dept}</div></div>
+    </div>
+    ${pill(st)}
+    <div class="sec-title" style="margin-top:14px">Time in role</div>
+    <div style="margin-bottom:14px">${barHTML(p,240)}</div>
+    <div class="sec-title">Skills</div>
+    <div style="margin-bottom:14px">${p.skills.map(s=>`<span class="tag">${s}</span>`).join("")}</div>
+    <dl class="kv"><dt>Employee ID</dt><dd>${p.id}</dd>
+    ${U.cl>=2?`<dt>Service</dt><dd>${p.svc.toFixed(1)} yrs</dd><dt>Last move</dt><dd>${p.lastMove}</dd>`:""}
+    <dt>Job scope</dt><dd>${p.scope}</dd></dl>
+    <div style="display:flex;gap:8px">
+      <button class="btn" onclick="openProfile('${p.id}')">Full profile</button>
+      <button class="btn primary" ${oq?"disabled":""} onclick="openRequestModal('${p.id}')">⇄ Request Transfer</button>
+    </div>
+    ${oq?`<div style="font-size:11.5px;color:var(--text-secondary);margin-top:8px">Open request ${oq.id} already in flight.</div>`:""}`;
+  $("qv").classList.add("open");
+}
+function closeQV(){ $("qv").classList.remove("open"); }
+
+/* ================= PROFILE ================= */
+function openProfile(pid){ curProfile = pid; profTab = 0; go("profile"); }
+function renderProfile(){
+  const p = P(curProfile); const st = statusOf(p); const th = TH[p.scope]||3.5; const oq = openReqFor(p.id);
+  const tabs = ["Overview","Posting History","Skills"].concat(U.cl>=3?["Notes"]:[]);
+  let body = "";
+  if (profTab===0) body = `<dl class="kv">
+      <dt>Employee ID</dt><dd>${p.id}</dd><dt>Department</dt><dd>${p.dept}</dd><dt>Role</dt><dd>${p.role}</dd>
+      <dt>Job scope</dt><dd>${p.scope}</dd><dt>Record clearance</dt><dd>L${p.cl}</dd>
+      ${U.cl>=2?`<dt>Years of service</dt><dd>${p.svc.toFixed(1)} yrs</dd><dt>Last move</dt><dd>${p.lastMove}</dd><dt>Posting threshold</dt><dd>${th} yrs (${p.scope})</dd>`:""}
+    </dl>`;
+  else if (profTab===1) body = `<table class="data"><thead><tr><th>Period</th><th>Department</th><th>Role</th><th>Scope</th></tr></thead><tbody>
+      ${p.history.map(h=>`<tr><td>${h.period}</td><td>${h.dept}</td><td>${h.role}</td><td>${h.scope}</td></tr>`).join("")}</tbody></table>`;
+  else if (profTab===2) body = `<div style="margin-bottom:10px">${p.skills.map(s=>`<span class="tag" style="font-size:12px;padding:3px 10px">${s}</span>`).join("")}</div>
+      <div style="font-size:12px;color:var(--text-secondary)">${p.skills.length} recorded skills · last verified Jan 2025</div>`;
+  else body = `<p style="font-size:13px">${p.notes}</p><div style="font-size:11.5px;color:var(--text-secondary);margin-top:8px">Visible at clearance L3 and above only.</div>`;
+
+  $("view-profile").innerHTML = `
+    <h1>Personnel Profile</h1>
+    <div class="page-sub"><a style="color:var(--accent);cursor:pointer" onclick="go('find')">‹ Back to results</a></div>
+    <div class="panel">
+      <div class="prof-head">
+        <div class="prof-photo">${initials(p.name)}</div>
+        <div class="info"><div class="nm">${p.name}</div><div class="role">${p.role} · ${p.dept} · ${p.id}</div>
+          <span class="tag">Clearance L${p.cl}</span> ${pill(st)}</div>
+        <button class="btn primary" ${oq?"disabled":""} onclick="openRequestModal('${p.id}')">⇄ ${oq?"Request in flight ("+oq.id+")":"Request Transfer"}</button>
+      </div>
+      <div class="tenure-block">
+        <div class="sec-title">Time in current role — ${p.tir.toFixed(1)} years <span style="font-weight:400;text-transform:none;letter-spacing:0">(posting threshold ${th} yrs — ▪ marker)</span></div>
+        <div class="bar" style="height:10px"><div class="fill ${st.k==='ok'?'ok':''}" style="width:${Math.min(p.tir/5,1)*100}%"></div><div class="marker" style="left:${Math.min(th/5,1)*100}%"></div></div>
+      </div>
+      <div class="prof-body">
+        <div class="tabs">${tabs.map((t,i)=>`<button class="${i===profTab?'on':''}" onclick="profTab=${i};renderProfile()">${t}${t==="Notes"?" (L3+)":""}</button>`).join("")}</div>
+        ${body}
+      </div>
+    </div>`;
+  audit(U.nm, "Viewed profile " + p.id);
+}
+
+/* ================= RECOMMENDATIONS ================= */
+function scoreFor(p, scope){
+  const req = SCOPE_SKILLS[scope];
+  const hit = p.skills.filter(s=>req.includes(s)).length;
+  const skillFrac = hit/req.length;
+  const tenureFrac = Math.min(p.tir/(TH[p.scope]||3.5), 1);
+  const scopeFrac = p.scope===scope ? 1 : 0.5;
+  return { score: Math.round((0.5*skillFrac + 0.3*tenureFrac + 0.2*scopeFrac)*100), hit, total: req.length };
+}
+function renderRecs(){
+  const ranked = visiblePeople().map(p=>({p, s:scoreFor(p, recScope)})).sort((a,b)=>b.s.score-a.s.score).slice(0,8);
+  const due = dueList();
+  $("view-recs").innerHTML = `
+    <h1>Recommendations</h1>
+    <div class="page-sub">Rule-based scoring · skills 50% / tenure readiness 30% / scope relevance 20%. Every match explains itself.</div>
+    <div class="rec-scope">
+      <div><div class="sec-title" style="margin-bottom:5px">Find candidates for job scope</div>
+      <select onchange="recScope=this.value;renderRecs()">${SCOPES.map(s=>`<option ${s===recScope?"selected":""}>${s}</option>`).join("")}</select></div>
+    </div>
+    <div class="panel" style="margin-bottom:20px">
+      <div class="panel-head"><span class="t">Ranked matches — ${recScope}</span><span style="font-size:11.5px;color:var(--text-secondary)">Required skills: ${SCOPE_SKILLS[recScope].join(", ")}</span></div>
+      ${ranked.map((r,i)=>{const p=r.p, st=statusOf(p), oq=openReqFor(p.id);return `<div class="rec-card">
+        <div class="rec-rank">${i+1}</div>
+        <div class="avatar brown" style="width:34px;height:34px">${initials(p.name)}</div>
+        <div class="rec-info"><div class="nm">${p.name} <span style="font-weight:400;font-size:11.5px;color:var(--text-secondary)">· ${p.role}, ${p.dept}</span></div>
+          <div class="why">Skills match ${r.s.hit}/${r.s.total} · ${p.scope===recScope?"scope-native":"cross-scope"} · ${p.tir.toFixed(1)} yrs in role ${p.tir>=(TH[p.scope]||3.5)?"— <b>past threshold</b>":""} · ${pill(st)}</div></div>
+        <div class="rec-score"><div class="bar-wrap"><div class="bar"><div class="fill" style="width:${r.s.score}%"></div></div><span class="val">${r.s.score}%</span></div></div>
+        <div class="rec-actions"><button class="btn small" onclick="openProfile('${p.id}')">Profile</button>
+        <button class="btn primary small" ${oq?"disabled":""} onclick="openRequestModal('${p.id}')">Request</button></div>
+      </div>`;}).join("")}
+    </div>
+    <div class="panel">
+      <div class="panel-head"><span class="t">⚠ Due for posting ${U.cl>=3?"— organisation":"— "+U.dept}</span>${U.cl<3?`<span class="pill neutral">org-wide view requires L3</span>`:""}</div>
+      ${due.length?`<table class="data"><thead><tr><th>Name</th><th>Dept</th><th>Role</th><th>Time in role</th><th>Threshold</th><th>Status</th></tr></thead><tbody>
+        ${due.map(p=>`<tr onclick="openProfile('${p.id}')"><td><b>${p.name}</b></td><td>${p.dept}</td><td>${p.role}</td><td>${barHTML(p)}</td><td>${TH[p.scope]} y</td><td>${pill(statusOf(p))}</td></tr>`).join("")}
+      </tbody></table>`:`<div class="empty">Nobody past threshold in this view.</div>`}
+    </div>`;
+}
+
+/* ================= REQUESTS ================= */
+function renderRequests(){
+  const recv = REQUESTS.filter(r => DEPT_MANAGER[r.from]===U.id || (r.status!=="pending-manager" && U.cl>=3));
+  const sent = myRequests();
+  const list = (reqTab==="received" ? recv : sent);
+  $("view-requests").innerHTML = `
+    <h1>Transfer Requests</h1>
+    <div class="page-sub">Nothing moves without sign-off. Manager approval → HR confirmation → move executed. Every step is logged.</div>
+    <div class="tabs">
+      <button class="${reqTab==='received'?'on':''}" onclick="reqTab='received';renderRequests()">Received (${recv.length})</button>
+      <button class="${reqTab==='sent'?'on':''}" onclick="reqTab='sent';renderRequests()">Sent (${sent.length})</button>
+    </div>
+    <div class="panel">
+      ${list.length?`<table class="data"><thead><tr><th>ID</th><th>Person</th><th>From → To</th><th>Proposed role</th><th>Requester</th><th>Status</th></tr></thead><tbody>
+      ${list.map(r=>{const p=P(r.person);return `<tr onclick="curReq='${r.id}';go('reqdetail')"><td>${r.id}</td><td><b>${p.name}</b></td><td>${r.from} → ${r.to}</td><td>${r.role}</td><td>${userById(r.requester).nm}</td><td>${statusPill(r.status)}${(r.status==="pending-manager"&&DEPT_MANAGER[r.from]===U.id)||(r.status==="pending-hr"&&U.cl>=3)?' <span class="pill accent">action needed</span>':""}</td></tr>`;}).join("")}
+      </tbody></table>`:`<div class="empty">No requests here yet.</div>`}
+    </div>`;
+}
+function renderReqDetail(){
+  const r = REQUESTS.find(x=>x.id===curReq);
+  if (!r) { go("requests"); return; }
+  const p = P(r.person);
+  const mine = (r.status==="pending-manager" && DEPT_MANAGER[r.from]===U.id) || (r.status==="pending-hr" && U.cl>=3);
+  const s = scoreFor(p, r.to==="Field Unit"?"Field Operations":r.to);
+  const tlDots = { "Submitted":"done", "Manager sign-off — approved":"done", "HR confirmation — move executed":"done" };
+  const decisionHTML = mine ? `
+      <div class="sec-title">Your decision ${r.status==="pending-hr"?"(HR confirmation)":"(manager sign-off)"}</div>
+      <textarea id="decComment" placeholder="Comments (required if declining)…"></textarea>
+      <div class="btns">
+        <button class="btn primary" onclick="approveReq()">✓ ${r.status==="pending-hr"?"Confirm move":"Approve"}</button>
+        <button class="btn" onclick="infoReq()">↩ Request info</button>
+        <button class="btn danger" onclick="declineReq()">✕ Decline</button>
+      </div>`
+    : `<div class="sec-title">Status</div>${statusPill(r.status)}
+       ${r.comment?`<div style="font-size:12.5px;margin-top:8px"><b>Comment:</b> ${r.comment}</div>`:""}
+       ${(r.requester===U.id && (r.status==="pending-manager"||r.status==="pending-hr"))?`<div style="margin-top:12px"><button class="btn danger small" onclick="withdrawReq()">Withdraw request</button></div>`:""}`;
+  $("view-reqdetail").innerHTML = `
+    <h1>${r.id} — ${p.name}</h1>
+    <div class="page-sub"><a style="color:var(--accent);cursor:pointer" onclick="go('requests')">‹ Back to requests</a></div>
+    <div class="req-grid">
+      <div class="panel req-detail">
+        <div class="sec-title">Request</div>
+        <dl class="kv">
+          <dt>Person</dt><dd><a style="color:var(--accent);cursor:pointer;font-weight:600" onclick="openProfile('${p.id}')">${p.name} (${p.id})</a></dd>
+          <dt>From</dt><dd>${r.from}${DEPT_MANAGER[r.from]===U.id?" — <b>your department</b>":""}</dd>
+          <dt>To</dt><dd>${r.to}</dd><dt>Proposed role</dt><dd>${r.role}</dd><dt>Start date</dt><dd>${r.start}</dd>
+          <dt>Requested by</dt><dd>${userById(r.requester).nm} (${userById(r.requester).rl})</dd>
+        </dl>
+        <div class="sec-title">Justification</div>
+        <p style="font-size:13px;margin-bottom:16px">"${r.just}"</p>
+        <div class="sec-title">Candidate snapshot <span style="font-weight:400;text-transform:none;letter-spacing:0">(within your clearance)</span></div>
+        <div style="margin-bottom:8px">${p.skills.map(x=>`<span class="tag">${x}</span>`).join("")}</div>
+        <dl class="kv" style="margin-top:10px">
+          <dt>Match for scope</dt><dd>${s.score}% (${s.hit}/${s.total} skills)</dd>
+          <dt>Time in role</dt><dd>${p.tir.toFixed(1)} yrs (threshold ${TH[p.scope]})</dd>
+          ${U.cl>=2?`<dt>Last move</dt><dd>${p.lastMove}</dd><dt>Service</dt><dd>${p.svc.toFixed(1)} yrs</dd>`:""}
+        </dl>
+      </div>
+      <div class="panel">
+        <div class="timeline"><div class="sec-title">Approval timeline</div>
+          ${r.events.map((e,i)=>`<div class="tl-item"><div class="tl-dot ${e.txt.includes("Declined")?"bad":i===r.events.length-1&&(r.status==="pending-manager"||r.status==="pending-hr")?"now":"done"}"></div>
+            <div><b>${e.txt}</b> — ${e.by}<div class="when">${e.t}</div></div></div>`).join("")}
+          ${r.status==="pending-manager"?`<div class="tl-item"><div class="tl-dot todo"></div><div>HR confirmation<div class="when">Next step</div></div></div>`:""}
+        </div>
+        <div class="decision" id="decisionBox">${decisionHTML}</div>
+      </div>
+    </div>`;
+}
+function req(){ return REQUESTS.find(x=>x.id===curReq); }
+function approveReq(){
+  const r = req();
+  if (r.status==="pending-manager"){
+    r.status="pending-hr";
+    r.events.push({t:now(), by:U.nm, txt:"Manager sign-off — approved"});
+    notify("farah", `${r.id} (${P(r.person).name}) awaits HR confirmation`, r.id);
+    notify(r.requester, `${r.id} approved by manager — pending HR`, r.id);
+    audit(U.nm, "Manager sign-off " + r.id);
+    toast(r.id + " approved — sent to HR for confirmation");
+  } else {
+    r.status="approved";
+    r.events.push({t:now(), by:U.nm, txt:"HR confirmation — move executed"});
+    const p = P(r.person);
+    p.history.unshift({period:"2025 — now", dept:r.to, role:r.role, scope:DEPT_SCOPE[r.to]});
+    p.dept = r.to; p.role = r.role; p.scope = DEPT_SCOPE[r.to]; p.tir = 0.1; p.lastMove = "Mar 2025";
+    notify(r.requester, `${r.id} (${p.name}) confirmed — move executed`, r.id);
+    audit(U.nm, "HR confirmation " + r.id + " — move executed");
+    toast(r.id + " confirmed — posting updated, tenure clock reset");
   }
-  setClearance(2);
+  renderBell(); renderReqDetail();
+}
+function declineReq(){
+  const r = req(); const c = $("decComment").value.trim();
+  if (!c) { toast("A comment is required when declining."); $("decComment").focus(); return; }
+  r.status="declined"; r.comment=c;
+  r.events.push({t:now(), by:U.nm, txt:"Declined — " + c});
+  notify(r.requester, `${r.id} (${P(r.person).name}) was declined`, r.id);
+  audit(U.nm, "Declined " + r.id);
+  toast(r.id + " declined — requester notified");
+  renderBell(); renderReqDetail();
+}
+function infoReq(){
+  const r = req();
+  r.events.push({t:now(), by:U.nm, txt:"Requested more information"});
+  notify(r.requester, `More information requested on ${r.id}`, r.id);
+  audit(U.nm, "Requested info on " + r.id);
+  toast("Requester notified for more information");
+  renderReqDetail();
+}
+function withdrawReq(){
+  const r = req();
+  r.status="withdrawn";
+  r.events.push({t:now(), by:U.nm, txt:"Withdrawn by requester"});
+  audit(U.nm, "Withdrew " + r.id);
+  toast(r.id + " withdrawn");
+  renderBell(); renderReqDetail();
+}
+
+/* ================= REQUEST MODAL ================= */
+function openRequestModal(pid){
+  const p = P(pid);
+  if (U.cl < 2) { toast("Requesting personnel requires clearance L2 or above."); return; }
+  if (openReqFor(pid)) { toast("An open request already exists for " + p.name); return; }
+  closeQV();
+  $("modalTitle").textContent = "Request Transfer — " + p.name;
+  $("modalBody").innerHTML = `
+    <dl class="kv"><dt>Person</dt><dd>${p.name} (${p.id})</dd><dt>Current</dt><dd>${p.role}, ${p.dept}</dd><dt>In role</dt><dd>${p.tir.toFixed(1)} yrs</dd></dl>
+    <div class="fg"><label>To department</label>
+      <select id="mTo">${DEPTS.filter(d=>d!==p.dept).map(d=>`<option>${d}</option>`).join("")}</select></div>
+    <div class="fg"><label>Proposed role</label><input id="mRole" placeholder="e.g. Senior Planner"></div>
+    <div class="fg"><label>Start date</label><input id="mStart" type="date" value="2025-05-01"></div>
+    <div class="fg"><label>Justification</label><textarea id="mJust" rows="3" placeholder="Why is this move needed?"></textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="submitRequest('${pid}')">Submit request</button>
+    </div>`;
+  $("modalBg").classList.add("show");
+}
+function closeModal(){ $("modalBg").classList.remove("show"); }
+function submitRequest(pid){
+  const role = $("mRole").value.trim(), just = $("mJust").value.trim();
+  if (!role || !just) { toast("Role and justification are required."); return; }
+  const p = P(pid);
+  const id = "REQ-" + String(++reqCounter).padStart(4,"0");
+  const r = { id, person:pid, from:p.dept, to:$("mTo").value, role, start:$("mStart").value, just,
+    requester:U.id, status:"pending-manager", comment:"",
+    events:[{t:now(), by:U.nm, txt:"Submitted request"}] };
+  REQUESTS.unshift(r);
+  const mgr = DEPT_MANAGER[p.dept];
+  notify(mgr, `${id} (${p.name}) awaits your sign-off`, id);
+  audit(U.nm, "Submitted " + id + " (" + p.name + ")");
+  closeModal(); renderBell();
+  toast(id + " submitted — current manager notified");
+  curReq = id; go("reqdetail");
+}
+
+/* ================= ADMIN ================= */
+function renderAdmin(){
+  $("view-admin").innerHTML = `
+    <h1>Admin Panel</h1>
+    <div class="page-sub">User clearance, posting rules, skill taxonomy and audit log. Restricted to L4.</div>
+    <div class="req-grid">
+      <div>
+        <div class="panel" style="margin-bottom:14px">
+          <div class="panel-head"><span class="t">Users & clearance</span></div>
+          <table class="data"><thead><tr><th>User</th><th>Role</th><th>Clearance</th></tr></thead><tbody>
+          ${USERS.map(u=>`<tr><td>${u.nm}</td><td>${u.rl}</td><td><span class="pill ${u.cl>=3?'accent':'neutral'}">L${u.cl}</span></td></tr>`).join("")}
+          </tbody></table>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><span class="t">Skill taxonomy</span></div>
+          <div class="req-detail">
+            <div style="margin-bottom:10px">${SKILLS.map(s=>`<span class="tag" style="font-size:12px;padding:3px 10px">${s}</span>`).join("")}</div>
+            <div style="display:flex;gap:8px"><input class="admin-in" id="newSkill" placeholder="Add a skill…"><button class="btn small" onclick="addSkill()">Add</button></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="panel" style="margin-bottom:14px">
+          <div class="panel-head"><span class="t">Posting thresholds (yrs in role)</span></div>
+          <div class="req-detail">
+            ${SCOPES.map(s=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="flex:1;font-size:12.5px">${s}</span><input class="admin-in" style="width:70px" type="number" step="0.5" min="1" max="8" id="th-${s}" value="${TH[s]}"></div>`).join("")}
+            <button class="btn primary small" onclick="saveThresholds()">Save thresholds</button>
+            <div style="font-size:11px;color:var(--text-secondary);margin-top:8px">Statuses and "due for posting" lists recompute immediately.</div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><span class="t">Audit log (latest)</span></div>
+          <table class="data"><tbody>
+            ${AUDIT.slice(0,12).map(a=>`<tr style="cursor:default"><td style="white-space:nowrap">${a.t}</td><td>${a.u}</td><td>${a.a}</td></tr>`).join("")}
+          </tbody></table>
+        </div>
+      </div>
+    </div>`;
+}
+function saveThresholds(){
+  SCOPES.forEach(s=>{ const v = parseFloat($("th-"+s).value); if (v>0) TH[s]=v; });
+  audit(U.nm, "Updated posting thresholds");
+  toast("Thresholds saved — statuses recomputed");
+}
+function addSkill(){
+  const v = $("newSkill").value.trim();
+  if (!v) return;
+  if (SKILLS.includes(v)) { toast("Skill already exists."); return; }
+  SKILLS.push(v); audit(U.nm, "Added skill '" + v + "'");
+  toast("Skill added"); renderAdmin();
+}
+
+/* ================= INIT ================= */
+renderAccts();
 </script>
 </body>
 </html>
